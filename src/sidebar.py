@@ -2,6 +2,7 @@ import flet as ft
 from src.responsive_menu_layout import ResponsiveMenuLayout, create_page
 from .home import Home
 
+
 class SideBar(ft.UserControl):
     def __init__(self, app_layout, page: ft.Page):
         super().__init__()
@@ -20,9 +21,7 @@ class SideBar(ft.UserControl):
         pages = [
             (
                 dict(icon=ft.icons.HOME, selected_icon=ft.icons.HOME, label="Home"),
-                # create_page("Home", "descripton")
-                # create_page(ctrls=Home(self.app_layout, self.page).controls)
-                Home(self.app_layout, self.page).create_page()
+                Home(self.app_layout, self.page).build()
             ),
             (
                 dict(icon=ft.icons.PERSON, selected_icon=ft.icons.PERSON, label="Accounts"),
