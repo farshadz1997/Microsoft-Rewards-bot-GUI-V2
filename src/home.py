@@ -1,25 +1,37 @@
 import flet as ft
-from datetime import time, datetime
+from datetime import datetime
+from pathlib import Path
+
 
 class Home(ft.UserControl):
-    def __init__(self, app_layout, page: ft.Page):
+    def __init__(self, parent, page: ft.Page):
         super().__init__()
-        self.app_layout = app_layout
+        self.parent = parent
         self.page = page
+        self.color_scheme = parent.color_scheme
         
+        self.ui()
+        self.page.update()
+        self.set_initial_values()
+        
+    def ui(self):
         self.pick_accounts_file = ft.FilePicker(on_result=self.pick_accounts_result)
         self.page.overlay.append(self.pick_accounts_file)
-        self.page.update()
         
         # Accounts controls
         self.accounts_controls = []
         self.accounts_path = ft.TextField(
             label="Accounts Path",
+            height=75,
             icon=ft.icons.FILE_OPEN,
             border_color=ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300,
             read_only=True,
             multiline=False,
-            expand=5
+            expand=5,
+            suffix=ft.IconButton(
+                icon=ft.icons.CLEAR,
+                on_click=self.clear_accounts_path,
+            ),
         )
         self.open_accounts_button = ft.ElevatedButton(
             "Open",
@@ -42,7 +54,7 @@ class Home(ft.UserControl):
         self.timer_field = ft.TextField(
             label="Set time",
             helper_text="Set time in 24h format (HH:MM)",
-            border_color=ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300,
+            border_color=self.color_scheme,
             icon=ft.icons.TIMER,
             multiline=False,
             expand=5,
@@ -53,11 +65,7 @@ class Home(ft.UserControl):
         self.timer_check_box = ft.Checkbox(
             label="Enable timer",
             height=self.timer_field.height,
-            fill_color={
-                "hovered": ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300,
-                "selected": ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300,
-                "": ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300
-            },
+            fill_color=self.color_scheme,
             on_change=self.timer_checkbox,
             expand=1,
             scale=1.2,
@@ -130,7 +138,7 @@ class Home(ft.UserControl):
                     controls=[
                         ft.ListTile(
                             leading=ft.Icon(ft.icons.INFO),
-                            title=ft.Text("Accounts infos"),
+                            title=ft.Text("Accounts informations"),
                             subtitle=ft.Text("Overall information about all accounts"),
                         ),
                         ft.Row(
@@ -181,15 +189,6 @@ class Home(ft.UserControl):
             disabled=True,
             color="red",
         )
-        self.buttons_container = ft.Container(
-            content=ft.Row(
-                controls=[
-                    self.stop_button,
-                    self.start_button
-                ],
-            ),
-            margin=ft.margin.symmetric(vertical=25)
-        )
         
     def build(self):
         return ft.Container(
@@ -232,6 +231,7 @@ class Home(ft.UserControl):
         
     def pick_accounts_result(self, e: ft.FilePickerResultEvent):
         self.accounts_path.value = e.files[0].path if e.files else None
+        self.page.client_storage.set("MRFarmer.accounts_path", self.accounts_path.value)
         self.page.update()
         
     def is_time_valid(self, e):
@@ -250,6 +250,7 @@ class Home(ft.UserControl):
             self.timer_field.error_text = "Invalid time"
             self.page.update()
         else:
+            self.page.client_storage.set("MRFarmer.timer", e.data)
             if self.timer_check_box.disabled:
                 self.timer_check_box.disabled = False
                 self.page.update()
@@ -258,8 +259,28 @@ class Home(ft.UserControl):
                 self.page.update()
                 
     def timer_checkbox(self, e):
+        self.page.client_storage.set("MRFarmer.timer_checkbox", True if e.data == "true" else False)
         if e.data == "true":
             self.timer_field.disabled = False
         else:
             self.timer_field.disabled = True
         self.page.update()
+        
+    def set_initial_values(self):
+        """Get values from client storage and set them to controls"""
+        self.accounts_path.value = self.page.client_storage.get("MRFarmer.accounts_path")
+        self.timer_field.value = self.page.client_storage.get("MRFarmer.timer")
+        self.timer_check_box.value = self.page.client_storage.get("MRFarmer.timer_checkbox")
+        self.page.update()
+        
+    def clear_accounts_path(self, e):
+        self.accounts_path.value = None
+        self.page.client_storage.remove("MRFarmer.accounts_path")
+        self.page.update()
+        
+    def toggle_theme_mode(self, color_scheme):
+        self.color_scheme = color_scheme
+        self.accounts_path.border_color = self.color_scheme
+        self.timer_field.border_color = self.color_scheme
+        self.timer_check_box.fill_color = self.color_scheme
+        

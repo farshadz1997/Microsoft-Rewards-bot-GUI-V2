@@ -1,6 +1,7 @@
 import flet as ft
 from flet import theme
 from src.home import Home
+from src.settings import Settings
 from src.responsive_menu_layout import ResponsiveMenuLayout, create_page
 
 
@@ -14,7 +15,8 @@ class UserInterface:
         self.page.title = "Microsoft Rewards Farmer"
         self.page.window_prevent_close = True
         self.page.on_window_event = self.window_event
-        self.page.theme_mode = "dark"
+        self.page.theme_mode = self.page.client_storage.get("MRFarmer.theme_mode") if self.page.client_storage.contains_key("MRFarmer.theme_mode") else "dark"
+        self.color_scheme = ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300
         self.page.theme =  theme.Theme(color_scheme_seed=LIGHT_SEED_COLOR)
         self.page.dark_theme = theme.Theme(color_scheme_seed=DARK_SEED_COLOR)
         self.ui()
@@ -51,6 +53,7 @@ class UserInterface:
         )
         
         self.home_page = Home(self, self.page)
+        self.settings_page = Settings(self, self.page)
         pages = [
             (
                 dict(icon=ft.icons.HOME, selected_icon=ft.icons.HOME, label="Home"),
@@ -70,7 +73,7 @@ class UserInterface:
             ),
             (
                 dict(icon=ft.icons.SETTINGS, selected_icon=ft.icons.SETTINGS, label="Settings"),
-                create_page("Settings", "descripton")
+                self.settings_page.build()
             )
         ]
         
@@ -91,19 +94,14 @@ class UserInterface:
     
     def toggle_theme_mode(self, e):
         self.page.theme_mode = "dark" if self.page.theme_mode == "light" else "light"
-        color_scheme = ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300
+        self.page.client_storage.set("MRFarmer.theme_mode", self.page.theme_mode)
+        self.color_scheme = ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300
         self.toggle_theme_button.icon = (
             ft.icons.MODE_NIGHT if self.page.theme_mode == "light" else ft.icons.WB_SUNNY_ROUNDED
         )
-        self.home_page.accounts_path.border_color = color_scheme
-        self.home_page.timer_field.border_color = color_scheme
-        self.home_page.timer_check_box.fill_color = {
-            "hovered": color_scheme,
-            "selected": color_scheme,
-            "": color_scheme
-        }
+        self.home_page.toggle_theme_mode(self.color_scheme)
+        self.settings_page.toggle_theme_mode(self.color_scheme)
         self.page.update()
-            
         
         
 if __name__ == "__main__":
