@@ -16,14 +16,13 @@ class Home(ft.UserControl):
         self.accounts_path = ft.TextField(
             label="Accounts Path",
             icon=ft.icons.FILE_OPEN,
-            border_color=ft.colors.BLUE_300,
+            border_color=ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300,
             read_only=True,
             multiline=False,
             expand=5
         )
         self.open_accounts_button = ft.ElevatedButton(
             "Open",
-            width=150,
             expand=1,
             height=self.accounts_path.height,
             icon=ft.icons.FILE_OPEN,
@@ -43,7 +42,7 @@ class Home(ft.UserControl):
         self.timer_field = ft.TextField(
             label="Set time",
             helper_text="Set time in 24h format (HH:MM)",
-            border_color=ft.colors.BLUE_300,
+            border_color=ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300,
             icon=ft.icons.TIMER,
             multiline=False,
             expand=5,
@@ -52,12 +51,144 @@ class Home(ft.UserControl):
             max_length=5,
         )
         self.timer_check_box = ft.Checkbox(
-            label="Actice timer",
+            label="Enable timer",
             height=self.timer_field.height,
-            fill_color={"hovered": "blue", "selected": "green", "": "blue"},
+            fill_color={
+                "hovered": ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300,
+                "selected": ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300,
+                "": ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300
+            },
             on_change=self.timer_checkbox,
             expand=1,
             scale=1.2,
+        )
+        
+        # Card to display current account, points counter, section and detail
+        self.current_account_label = ft.Text("Current account")
+        self.current_points_label = ft.Text("Current point:")
+        self.current_points = ft.Text("0")
+        self.section_label = ft.Text("Section:")
+        self.section = ft.Text("-")
+        self.detail_label = ft.Text("Detail:")
+        self.detail = ft.Text("-")
+        self.account_description_card = ft.Card(
+            content=ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.ListTile(
+                            title=self.current_account_label,
+                            leading=ft.Icon(ft.icons.EMAIL),
+                            subtitle=ft.Text("Information about current account"),
+                        ),
+                        ft.Row(
+                            controls=[
+                                self.current_points_label,
+                                self.current_points
+                            ],
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            expand=True
+                        ),
+                        ft.Row(
+                            controls=[
+                                self.section_label,
+                                self.section
+                            ],
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            expand=True
+                        ),
+                        ft.Row(
+                            controls=[
+                                self.detail_label,
+                                self.detail
+                            ],
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            expand=True
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER
+                ),
+            margin=ft.margin.all(15),
+            ),
+            height=270,
+            expand=3,
+            disabled=False,
+            margin=ft.margin.symmetric(vertical=25)
+        )
+        
+        # Card to display overall information about all accounts
+        self.number_of_accounts_label = ft.Text("All: ", text_align="left")
+        self.number_of_accounts = ft.Text("0", text_align="right")
+        self.finished_accounts_label = ft.Text("Finished: ")
+        self.number_of_finished_accounts = ft.Text("0")
+        self.locked_accounts_label = ft.Text("Locked: ")
+        self.number_of_locked_accounts = ft.Text("0")
+        self.suspended_accounts_label = ft.Text("Suspended: ")
+        self.number_of_supended_accounts = ft.Text("0")
+        self.overall_description_card = ft.Card(
+            content=ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.ListTile(
+                            leading=ft.Icon(ft.icons.INFO),
+                            title=ft.Text("Accounts infos"),
+                            subtitle=ft.Text("Overall information about all accounts"),
+                        ),
+                        ft.Row(
+                            controls=[
+                                self.number_of_accounts_label,
+                                self.number_of_accounts
+                            ],
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                        ),
+                        ft.Row(
+                            controls=[
+                                self.finished_accounts_label,
+                                self.number_of_finished_accounts
+                            ],
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                        ),
+                        ft.Row(
+                            controls=[
+                                self.locked_accounts_label,
+                                self.number_of_locked_accounts
+                            ],
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                        ),
+                        ft.Row(
+                            controls=[
+                                self.suspended_accounts_label,
+                                self.number_of_supended_accounts
+                            ],
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER
+                ),
+            margin=ft.margin.all(15),
+            ),
+            expand=3,
+            margin=ft.margin.symmetric(vertical=25)
+        )
+        
+        # Start and stop buttons
+        self.start_button = ft.ElevatedButton(
+            text="Start",
+            icon=ft.icons.START,
+        )
+        self.stop_button = ft.ElevatedButton(
+            text="Stop",
+            icon=ft.icons.STOP,
+            disabled=True,
+            color="red",
+        )
+        self.buttons_container = ft.Container(
+            content=ft.Row(
+                controls=[
+                    self.stop_button,
+                    self.start_button
+                ],
+            ),
+            margin=ft.margin.symmetric(vertical=25)
         )
         
     def build(self):
@@ -78,6 +209,22 @@ class Home(ft.UserControl):
                             self.timer_field,
                             self.timer_check_box
                         ]
+                    ),
+                    ft.Row(
+                        controls=[
+                            self.account_description_card,
+                            self.overall_description_card
+                        ]
+                    ),
+                    ft.Container(
+                        content=ft.Row(
+                            controls=[
+                                self.stop_button,
+                                self.start_button
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER
+                        ),
+                        margin=ft.margin.symmetric(vertical=25)
                     )
                 ]
             )
