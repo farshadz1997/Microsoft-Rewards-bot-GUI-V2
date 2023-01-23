@@ -2,6 +2,7 @@ import flet as ft
 from flet import theme
 from src.home import Home
 from src.settings import Settings
+from src.telegram import Telegram
 from src.responsive_menu_layout import ResponsiveMenuLayout, create_page
 
 
@@ -19,6 +20,10 @@ class UserInterface:
         self.color_scheme = ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300
         self.page.theme =  theme.Theme(color_scheme_seed=LIGHT_SEED_COLOR)
         self.page.dark_theme = theme.Theme(color_scheme_seed=DARK_SEED_COLOR)
+        self.page.window_height = 800
+        self.page.window_width = 1280
+        self.page.window_min_height = 800
+        self.page.window_min_width = 1100
         self.ui()
         self.page.update()
         
@@ -54,6 +59,7 @@ class UserInterface:
         
         self.home_page = Home(self, self.page)
         self.settings_page = Settings(self, self.page)
+        self.telegram_page = Telegram(self, self.page)
         pages = [
             (
                 dict(icon=ft.icons.HOME, selected_icon=ft.icons.HOME, label="Home"),
@@ -65,7 +71,7 @@ class UserInterface:
             ),
             (
                 dict(icon=ft.icons.TELEGRAM, selected_icon=ft.icons.TELEGRAM, label="Telegram"),
-                create_page("Telegram", "descripton")
+                self.telegram_page.build()
             ),
             (
                 dict(icon=ft.icons.DISCORD, selected_icon=ft.icons.DISCORD, label="Discord"),
@@ -101,6 +107,7 @@ class UserInterface:
         )
         self.home_page.toggle_theme_mode(self.color_scheme)
         self.settings_page.toggle_theme_mode(self.color_scheme)
+        self.telegram_page.toggle_theme_mode(self.color_scheme)
         self.page.update()
         
         
