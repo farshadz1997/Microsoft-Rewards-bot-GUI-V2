@@ -57,6 +57,19 @@ class Settings(ft.UserControl):
             content=ft.Container(
                 content=ft.Column(
                     controls=[
+                        ft.Row(
+                            controls=[
+                                ft.Text(
+                                    value="Settings",
+                                    text_align="center",
+                                    size=24,
+                                    weight="bold",
+                                    expand=6
+                                )
+                            ],
+                            vertical_alignment="center",
+                        ),
+                        ft.Divider(),
                         ft.Row([self.pc_user_agent_field]),
                         ft.Row([self.mobile_user_agent_field]),
                         ft.Row(
@@ -128,21 +141,25 @@ class Settings(ft.UserControl):
         # farmer settings
         self.daily_quests_switch = ft.Switch(
             label="Daily quests",
+            value=True,
             active_color=self.color_scheme,
             on_change=lambda e: self.switches_on_change(e, self.daily_quests_switch)
         )
         self.punch_cards_switch = ft.Switch(
             label="Punch cards",
+            value=True,
             active_color=self.color_scheme,
             on_change=lambda e: self.switches_on_change(e, self.punch_cards_switch)
         )
         self.more_activities_switch = ft.Switch(
             label="More activities",
+            value=True,
             active_color=self.color_scheme,
             on_change=lambda e: self.switches_on_change(e, self.more_activities_switch)
         )
         self.pc_search_switch = ft.Switch(
             label="PC search",
+            value=True,
             active_color=self.color_scheme,
             on_change=lambda e: self.switches_on_change(e, self.pc_search_switch)
         )
@@ -209,12 +226,31 @@ class Settings(ft.UserControl):
         self.save_errors_switch.value = self.page.client_storage.get("MRFarmer.save_errors")
         self.shutdown_switch.value = self.page.client_storage.get("MRFarmer.shutdown")
         # farmer settings
-        self.daily_quests_switch.value = self.page.client_storage.get("MRFarmer.daily_quests")
-        self.punch_cards_switch.value = self.page.client_storage.get("MRFarmer.punch_cards")
-        self.more_activities_switch.value = self.page.client_storage.get("MRFarmer.more_activities")
-        self.pc_search_switch.value = self.page.client_storage.get("MRFarmer.pc_search")
-        self.mobile_search_switch.value = self.page.client_storage.get("MRFarmer.mobile_search")
-        
+        self.daily_quests_switch.value = (
+            self.page.client_storage.get("MRFarmer.daily_quests") 
+            if self.page.client_storage.contains_key("MRFarmer.daily_quests") 
+            else True
+        )
+        self.punch_cards_switch.value = (
+            self.page.client_storage.get("MRFarmer.punch_cards") 
+            if self.page.client_storage.contains_key("MRFarmer.punch_cards") 
+            else True
+        )
+        self.more_activities_switch.value = (
+            self.page.client_storage.get("MRFarmer.more_activities") 
+            if self.page.client_storage.contains_key("MRFarmer.more_activities") 
+            else True
+        )
+        self.pc_search_switch.value = (
+            self.page.client_storage.get("MRFarmer.pc_search") 
+            if self.page.client_storage.contains_key("MRFarmer.pc_search") 
+            else True
+        )
+        self.mobile_search_switch.value = (
+            self.page.client_storage.get("MRFarmer.mobile_search") 
+            if self.page.client_storage.contains_key("MRFarmer.mobile_search") 
+            else True
+        )
         self.page.update()
     
     def clear_pc_user_agent_field(self, e):
