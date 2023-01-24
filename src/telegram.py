@@ -39,9 +39,9 @@ class Telegram(ft.UserControl):
             on_change=lambda e: self.text_fields_on_change(e, self.token_field),
             error_style=ft.TextStyle(color="red")
         )
-        self.token_paste_button = ft.IconButton(
+        self.token_paste_button = ft.TextButton(
+            text="Paste",
             icon=ft.icons.PASTE,
-            icon_size=36,
             icon_color=self.color_scheme,
             tooltip="Paste from clipboard",
             on_click=lambda e: self.paste_from_clipboard(e, self.token_field),
@@ -64,10 +64,10 @@ class Telegram(ft.UserControl):
             on_change=lambda e: self.text_fields_on_change(e, self.chat_id_field),
             error_style=ft.TextStyle(color="red")
         )
-        self.chat_id_paste_button = ft.IconButton(
+        self.chat_id_paste_button = ft.TextButton(
+            text="Paste",
             icon=ft.icons.PASTE,
             icon_color=self.color_scheme,
-            icon_size=36,
             tooltip="Paste from clipboard",
             on_click=lambda e: self.paste_from_clipboard(e, self.chat_id_field),
             expand=1
@@ -108,10 +108,10 @@ class Telegram(ft.UserControl):
                 icon_color=self.color_scheme
             ),
         )
-        self.send_test_message_button = ft.IconButton(
+        self.send_test_message_button = ft.TextButton(
+            text="Send",
             icon=ft.icons.SEND,
             icon_color=self.color_scheme,
-            icon_size=36,
             on_click=self.send_test_message,
             expand=1,
             tooltip="Send message"
