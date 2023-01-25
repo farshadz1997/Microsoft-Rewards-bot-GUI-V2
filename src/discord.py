@@ -78,9 +78,11 @@ class Discord(ft.UserControl):
             on_click=self.send_message,
         )
         self.discord_card = ft.Card(
-            expand=6,
+            expand=12,
             content=ft.Container(
                 margin=ft.margin.all(15),
+                height=600,
+                alignment=ft.alignment.top_left,
                 content=ft.Column(
                     controls=[
                         ft.Row(
@@ -117,7 +119,7 @@ class Discord(ft.UserControl):
                             ]
                         )
                     ],
-                    alignment=ft.MainAxisAlignment.CENTER,
+                    alignment=ft.MainAxisAlignment.START,
                 )
             )
         )
@@ -125,8 +127,9 @@ class Discord(ft.UserControl):
     def build(self):
         return ft.Container(
             margin=ft.margin.all(25),
+            alignment=ft.alignment.top_center,
             content=ft.Column(
-                alignment=ft.MainAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.START,
                 horizontal_alignment="stretch",
                 controls=[
                     ft.Row(
@@ -138,16 +141,8 @@ class Discord(ft.UserControl):
         ) 
     
     def set_initial_values(self):
-        self.webhook_field.value = (
-            self.page.client_storage.get("MRFarmer.discord_webhook_url")
-            if self.page.client_storage.contains_key("MRFarmer.discord_webhook_url")
-            else ""
-        )
-        self.discord_switch.value = (
-            self.page.client_storage.get("MRFarmer.send_to_discord")
-            if self.page.client_storage.contains_key("MRFarmer.send_to_discord")
-            else False
-        )
+        self.webhook_field.value = self.page.client_storage.get("MRFarmer.discord_webhook_url")
+        self.discord_switch.value = self.page.client_storage.get("MRFarmer.send_to_discord")
         self.page.update()
     
     def toggle_theme_mode(self, color_scheme):
