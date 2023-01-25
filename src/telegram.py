@@ -119,6 +119,7 @@ class Telegram(ft.UserControl):
         
         self.telegram_card = ft.Card(
             content=ft.Container(
+                height=600,
                 content=ft.Column(
                     controls=[
                         ft.Row(
@@ -157,7 +158,7 @@ class Telegram(ft.UserControl):
                             ]
                         )
                     ],
-                    alignment=ft.MainAxisAlignment.CENTER,
+                    alignment=ft.MainAxisAlignment.START,
                 ),
                 margin=ft.margin.all(15)
             ),
