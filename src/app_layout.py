@@ -1,9 +1,13 @@
 import flet as ft
 from flet import theme
-from src.home import Home
-from src.settings import Settings
-from src.telegram import Telegram
-from src.responsive_menu_layout import ResponsiveMenuLayout, create_page
+from .home import Home
+from .settings import Settings
+from .telegram import Telegram
+from .discord import Discord
+from .accounts import Accounts
+from .core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
+from .responsive_menu_layout import ResponsiveMenuLayout, create_page
+from pathlib import Path
 
 
 LIGHT_SEED_COLOR = ft.colors.BLUE
@@ -16,14 +20,17 @@ class UserInterface:
         self.page.title = "Microsoft Rewards Farmer"
         self.page.window_prevent_close = True
         self.page.on_window_event = self.window_event
-        self.page.theme_mode = self.page.client_storage.get("MRFarmer.theme_mode") if self.page.client_storage.contains_key("MRFarmer.theme_mode") else "dark"
+        if not self.page.client_storage.get("MRFarmer.has_run_before"):
+            self.first_time_setup()
+        self.page.theme_mode = self.page.client_storage.get("MRFarmer.theme_mode")
         self.color_scheme = ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300
-        self.page.theme =  theme.Theme(color_scheme_seed=LIGHT_SEED_COLOR)
+        self.page.theme = theme.Theme(color_scheme_seed=LIGHT_SEED_COLOR)
         self.page.dark_theme = theme.Theme(color_scheme_seed=DARK_SEED_COLOR)
-        self.page.window_height = 800
+        self.page.window_height = 820
         self.page.window_width = 1280
-        self.page.window_min_height = 800
-        self.page.window_min_width = 1100
+        self.page.window_resizable = False
+        self.page.window_maximizable = False
+        self.page.window_center()
         self.ui()
         self.page.update()
         
@@ -46,7 +53,7 @@ class UserInterface:
             ]
         )
         # Exit dialog confirmation
-        self.confirm_dialog = ft.AlertDialog(
+        self.exit_dialog = ft.AlertDialog(
             modal=False,
             title=ft.Text("Exit confirmation"),
             content=ft.Text("Do you really want to exit?"),
@@ -60,6 +67,8 @@ class UserInterface:
         self.home_page = Home(self, self.page)
         self.settings_page = Settings(self, self.page)
         self.telegram_page = Telegram(self, self.page)
+        self.discord_page = Discord(self, self.page)
+        self.accounts_page = Accounts(self, self.page)
         pages = [
             (
                 dict(icon=ft.icons.HOME, selected_icon=ft.icons.HOME, label="Home"),
@@ -67,7 +76,7 @@ class UserInterface:
             ),
             (
                 dict(icon=ft.icons.PERSON, selected_icon=ft.icons.PERSON, label="Accounts"),
-                create_page("Accounts", "descripton")
+                self.accounts_page.build()
             ),
             (
                 dict(icon=ft.icons.TELEGRAM, selected_icon=ft.icons.TELEGRAM, label="Telegram"),
@@ -75,7 +84,7 @@ class UserInterface:
             ),
             (
                 dict(icon=ft.icons.DISCORD, selected_icon=ft.icons.DISCORD, label="Discord"),
-                create_page("Discord", "descripton")
+                self.discord_page.build()
             ),
             (
                 dict(icon=ft.icons.SETTINGS, selected_icon=ft.icons.SETTINGS, label="Settings"),
@@ -90,12 +99,12 @@ class UserInterface:
         
     def window_event(self, e):
         if e.data == "close":
-            self.page.dialog = self.confirm_dialog
-            self.confirm_dialog.open = True
+            self.page.dialog = self.exit_dialog
+            self.exit_dialog.open = True
             self.page.update()
             
     def no_click(self, e):
-        self.confirm_dialog.open = False
+        self.exit_dialog.open = False
         self.page.update()
     
     def toggle_theme_mode(self, e):
@@ -108,8 +117,37 @@ class UserInterface:
         self.home_page.toggle_theme_mode(self.color_scheme)
         self.settings_page.toggle_theme_mode(self.color_scheme)
         self.telegram_page.toggle_theme_mode(self.color_scheme)
+        self.discord_page.toggle_theme_mode(self.color_scheme)
         self.page.update()
         
+    def first_time_setup(self):
+        """If it's the first time that app being used, it sets the default values to client storage"""
+        directory_path = Path(__file__).parent.parent
+        accounts_path = str(Path(f"{directory_path}\\accounts.json").resolve())
+        self.page.client_storage.set("MRFarmer.has_run_before", True)
+        self.page.client_storage.set("MRFarmer.theme_mode", "dark")
+        # home
+        self.page.client_storage.set("MRFarmer.accounts_path", accounts_path)
+        self.page.client_storage.set("MRFarmer.timer", "00:00")
+        self.page.client_storage.set("MRFarmer.timer_switch", False)
+        # settings
+        self.page.client_storage.set("MRFarmer.pc_user_agent", PC_USER_AGENT)
+        self.page.client_storage.set("MRFarmer.mobile_user_agent", MOBILE_USER_AGENT)
+        self.page.client_storage.set("MRFarmer.headless", False)
+        self.page.client_storage.set("MRFarmer.fast", False)
+        self.page.client_storage.set("MRFarmer.session", False)
+        self.page.client_storage.set("MRFarmer.save_errors", False)
+        self.page.client_storage.set("MRFarmer.shutdown", False)
+        self.page.client_storage.set("MRFarmer.daily_quests", True)
+        self.page.client_storage.set("MRFarmer.punch_cards", True)
+        self.page.client_storage.set("MRFarmer.more_activities", True)
+        self.page.client_storage.set("MRFarmer.pc_search", True)
+        self.page.client_storage.set("MRFarmer.mobile_search", True)
+        # telegram
+        self.page.client_storage.set("MRFarmer.telegram_token", "")
+        self.page.client_storage.set("MRFarmer.telegram_chat_id", "")
+        self.page.client_storage.set("MRFarmer.send_to_telegram", False)
+        # discord
+        self.page.client_storage.set("MRFarmer.discord_webhook_url", "")
+        self.page.client_storage.set("MRFarmer.send_to_discord", False)
         
-if __name__ == "__main__":
-    ft.app(target=UserInterface)
