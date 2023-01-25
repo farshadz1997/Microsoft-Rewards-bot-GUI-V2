@@ -211,14 +211,8 @@ class Settings(ft.UserControl):
     
     def set_initial_values(self):
         # user-agents
-        if not self.page.client_storage.contains_key("MRFarmer.pc_user_agent"):
-            self.pc_user_agent_field.value = PC_USER_AGENT
-        else:
-            self.pc_user_agent_field.value = self.page.client_storage.get("MRFarmer.pc_user_agent")
-        if not self.page.client_storage.contains_key("MRFarmer.mobile_user_agent"):
-            self.mobile_user_agent_field.value = MOBILE_USER_AGENT
-        else:
-            self.mobile_user_agent_field.value = self.page.client_storage.get("MRFarmer.mobile_user_agent")
+        self.pc_user_agent_field.value = self.page.client_storage.get("MRFarmer.pc_user_agent")
+        self.mobile_user_agent_field.value = self.page.client_storage.get("MRFarmer.mobile_user_agent")
         # global settings
         self.headless_switch.value = self.page.client_storage.get("MRFarmer.headless")
         self.fast_switch.value = self.page.client_storage.get("MRFarmer.fast")
@@ -226,31 +220,11 @@ class Settings(ft.UserControl):
         self.save_errors_switch.value = self.page.client_storage.get("MRFarmer.save_errors")
         self.shutdown_switch.value = self.page.client_storage.get("MRFarmer.shutdown")
         # farmer settings
-        self.daily_quests_switch.value = (
-            self.page.client_storage.get("MRFarmer.daily_quests") 
-            if self.page.client_storage.contains_key("MRFarmer.daily_quests") 
-            else True
-        )
-        self.punch_cards_switch.value = (
-            self.page.client_storage.get("MRFarmer.punch_cards") 
-            if self.page.client_storage.contains_key("MRFarmer.punch_cards") 
-            else True
-        )
-        self.more_activities_switch.value = (
-            self.page.client_storage.get("MRFarmer.more_activities") 
-            if self.page.client_storage.contains_key("MRFarmer.more_activities") 
-            else True
-        )
-        self.pc_search_switch.value = (
-            self.page.client_storage.get("MRFarmer.pc_search") 
-            if self.page.client_storage.contains_key("MRFarmer.pc_search") 
-            else True
-        )
-        self.mobile_search_switch.value = (
-            self.page.client_storage.get("MRFarmer.mobile_search") 
-            if self.page.client_storage.contains_key("MRFarmer.mobile_search") 
-            else True
-        )
+        self.daily_quests_switch.value = self.page.client_storage.get("MRFarmer.daily_quests") 
+        self.punch_cards_switch.value = self.page.client_storage.get("MRFarmer.punch_cards") 
+        self.more_activities_switch.value = self.page.client_storage.get("MRFarmer.more_activities") 
+        self.pc_search_switch.value = self.page.client_storage.get("MRFarmer.pc_search") 
+        self.mobile_search_switch.value = self.page.client_storage.get("MRFarmer.mobile_search") 
         self.page.update()
     
     def clear_pc_user_agent_field(self, e):
@@ -268,10 +242,10 @@ class Settings(ft.UserControl):
             self.page.client_storage.set("MRFarmer.mobile_user_agent", self.mobile_user_agent_field.value)
             
     def delete_user_agents(self, e):
-        self.page.client_storage.remove("MRFarmer.pc_user_agent")
-        self.pc_user_agent_field.value = None
-        self.page.client_storage.remove("MRFarmer.mobile_user_agent")
-        self.mobile_user_agent_field.value = None
+        self.page.client_storage.set("MRFarmer.pc_user_agent", PC_USER_AGENT)
+        self.pc_user_agent_field.value = PC_USER_AGENT
+        self.page.client_storage.set("MRFarmer.mobile_user_agent", MOBILE_USER_AGENT)
+        self.mobile_user_agent_field.value = MOBILE_USER_AGENT
         self.page.update()
     
     def switches_on_change(self, e, control: ft.Switch):
