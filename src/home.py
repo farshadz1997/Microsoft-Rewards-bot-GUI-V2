@@ -1,6 +1,6 @@
 import flet as ft
 from datetime import datetime
-from pathlib import Path
+import json
 
 
 class Home(ft.UserControl):
@@ -19,7 +19,6 @@ class Home(ft.UserControl):
         self.page.overlay.append(self.pick_accounts_file)
         
         # Accounts controls
-        self.accounts_controls = []
         self.accounts_path = ft.TextField(
             label="Accounts Path",
             height=75,
@@ -33,17 +32,12 @@ class Home(ft.UserControl):
                 on_click=self.clear_accounts_path,
             ),
         )
-        self.open_accounts_button = ft.ElevatedButton(
+        self.open_accounts_button = ft.FloatingActionButton(
             "Open",
             expand=1,
             height=self.accounts_path.height,
             icon=ft.icons.FILE_OPEN,
-            style=ft.ButtonStyle(
-                shape={
-                    ft.MaterialState.DEFAULT: ft.RoundedRectangleBorder(radius=5),
-                },
-                padding=ft.padding.all(20)
-            ),
+            bgcolor=self.color_scheme,
             on_click=lambda _: self.pick_accounts_file.pick_files(
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["json",]
@@ -53,7 +47,7 @@ class Home(ft.UserControl):
         # Timer control
         self.timer_field = ft.TextField(
             label="Set time",
-            helper_text="Set time in 24h format (HH:MM)",
+            helper_text="Set time in 24h format (HH:MM) if you want to run it at specific time",
             border_color=self.color_scheme,
             icon=ft.icons.TIMER,
             multiline=False,
@@ -62,13 +56,46 @@ class Home(ft.UserControl):
             on_change=self.is_time_valid,
             max_length=5,
         )
-        self.timer_check_box = ft.Checkbox(
+        self.timer_switch = ft.Switch(
             label="Enable timer",
-            height=self.timer_field.height,
-            fill_color=self.color_scheme,
-            on_change=self.timer_checkbox,
+            active_color=self.color_scheme,
+            on_change=self.timer_switch_event,
             expand=1,
-            scale=1.2,
+        )
+        
+        self.main_card = ft.Card(
+            expand=6,
+            content=ft.Container(
+                margin=ft.margin.all(15),
+                content=ft.Column(
+                    controls=[
+                        ft.Row(
+                            controls=[
+                                ft.Text(
+                                    "Farmer",
+                                    size=24,
+                                    weight=ft.FontWeight.BOLD,
+                                    text_align="center",
+                                    expand=6
+                                )
+                            ]
+                        ),
+                        ft.Divider(),
+                        ft.Row(
+                            controls=[
+                                self.accounts_path,
+                                self.open_accounts_button,
+                            ]
+                        ),
+                        ft.Row(
+                            controls=[
+                                self.timer_field,
+                                self.timer_switch
+                            ]
+                        )
+                    ]
+                )
+            )
         )
         
         # Card to display current account, points counter, section and detail
@@ -190,6 +217,15 @@ class Home(ft.UserControl):
             color="red",
         )
         
+        self.error_dialog = ft.AlertDialog(
+            actions=[
+                ft.ElevatedButton(
+                    text="Ok",
+                    on_click=self.close_error)
+            ],
+            actions_alignment="end"
+        )
+        
     def build(self):
         return ft.Container(
             margin=ft.margin.all(25),
@@ -199,14 +235,7 @@ class Home(ft.UserControl):
                 controls=[
                     ft.Row(
                         controls=[
-                            self.accounts_path,
-                            self.open_accounts_button
-                        ]
-                    ),
-                    ft.Row(
-                        controls=[
-                            self.timer_field,
-                            self.timer_check_box
+                            self.main_card,
                         ]
                     ),
                     ft.Row(
@@ -230,57 +259,106 @@ class Home(ft.UserControl):
         )
         
     def pick_accounts_result(self, e: ft.FilePickerResultEvent):
-        self.accounts_path.value = e.files[0].path if e.files else None
-        self.page.client_storage.set("MRFarmer.accounts_path", self.accounts_path.value)
+        if e.files:
+            if self.is_account_file_valid(e.files[0].path):
+                self.page.client_storage.set("MRFarmer.accounts_path", e.files[0].path)
+                self.accounts_path.value = e.files[0].path
+                if self.start_button.disabled:
+                    self.start_button.disabled = False
+                self.page.update()
+                
+    def disable_start_button(self):
+        self.start_button.disabled = True
         self.page.update()
-        
+    
+    def is_account_file_valid(self, path, on_start: bool = False):
+        """Check to see wheather selected file json readable or not to display error"""
+        try:
+            accounts: list = json.load(open(path, "r"))
+            for account in accounts:
+                if not all(key in account for key in ("username", "password")):
+                    raise KeyError(f"Lookup to find either username or password in {account} failed.")
+        except KeyError as e:
+            if not on_start:
+                self.display_error("Key error", e)
+            else:
+                self.page.client_storage.set("MRFarmer.accounts_path", "")
+                self.disable_start_button()
+            return False
+        except json.decoder.JSONDecodeError:
+            if not on_start:
+                self.display_error("JSON error", "Selected file is not a valid JSON file. Make sure it doesn't have typo.")
+            else:
+                self.page.client_storage.set("MRFarmer.accounts_path", "")
+                self.disable_start_button()
+            return False
+        except FileNotFoundError:
+            self.page.client_storage.set("MRFarmer.accounts_path", "")
+            self.disable_start_button()
+            return False
+        else:
+            self.page.session.set("MRFarmer.accounts", accounts)
+            return True
+      
     def is_time_valid(self, e):
-        if e.data == "":
-            self.timer_field.error_text = None
-            self.timer_field.value = "00:00"
-            e.data = "00:00"
-            self.page.update()
         try:
             datetime.strptime(e.data, "%H:%M")
             if len(e.data) < 5:
                 raise ValueError
         except ValueError:
-            self.timer_check_box.disabled = True
-            self.timer_check_box.value = False
+            self.timer_switch.disabled = True
+            self.timer_switch.value = False
+            self.page.client_storage.set("MRFarmer.timer_switch", False)
             self.timer_field.error_text = "Invalid time"
             self.page.update()
         else:
             self.page.client_storage.set("MRFarmer.timer", e.data)
-            if self.timer_check_box.disabled:
-                self.timer_check_box.disabled = False
+            if self.timer_switch.disabled:
+                self.timer_switch.disabled = False
                 self.page.update()
             if self.timer_field.error_text:
                 self.timer_field.error_text = None
                 self.page.update()
                 
-    def timer_checkbox(self, e):
-        self.page.client_storage.set("MRFarmer.timer_checkbox", True if e.data == "true" else False)
-        if e.data == "true":
-            self.timer_field.disabled = False
-        else:
-            self.timer_field.disabled = True
+    def timer_switch_event(self, e):
+        self.page.client_storage.set("MRFarmer.timer_switch", self.timer_switch.value)
+        self.timer_field.disabled = not self.timer_switch.value
         self.page.update()
         
     def set_initial_values(self):
         """Get values from client storage and set them to controls"""
+        if self.is_account_file_valid(self.page.client_storage.get("MRFarmer.accounts_path"), on_start=True):
+            self.accounts_path.value = self.page.client_storage.get("MRFarmer.accounts_path")
+        else:
+            self.page.client_storage.set("MRFarmer_accounts_path", "")
+            self.accounts_path.value = ""
         self.accounts_path.value = self.page.client_storage.get("MRFarmer.accounts_path")
         self.timer_field.value = self.page.client_storage.get("MRFarmer.timer")
-        self.timer_check_box.value = self.page.client_storage.get("MRFarmer.timer_checkbox")
+        self.timer_switch.value = self.page.client_storage.get("MRFarmer.timer_switch")
         self.page.update()
         
     def clear_accounts_path(self, e):
-        self.accounts_path.value = None
-        self.page.client_storage.remove("MRFarmer.accounts_path")
+        self.accounts_path.value = ""
+        self.page.client_storage.set("MRFarmer.accounts_path", "")
+        self.page.session.remove("MRFarmer.accounts")
+        self.start_button.disabled = True
         self.page.update()
         
     def toggle_theme_mode(self, color_scheme):
         self.color_scheme = color_scheme
-        self.accounts_path.border_color = self.color_scheme
-        self.timer_field.border_color = self.color_scheme
-        self.timer_check_box.fill_color = self.color_scheme
-        
+        self.open_accounts_button.bgcolor = color_scheme
+        self.accounts_path.border_color = color_scheme
+        self.timer_field.border_color = color_scheme
+        self.timer_switch.active_color = color_scheme
+    
+    def display_error(self, title: str, description: str):
+        self.error_dialog.title = ft.Text(title)
+        self.error_dialog.content = ft.Text(description)
+        self.page.dialog = self.error_dialog
+        self.error_dialog.open = True
+        self.page.update()
+    
+    def close_error(self, e):
+        self.error_dialog.open = False
+        self.page.update()
+    
