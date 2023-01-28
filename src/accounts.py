@@ -7,6 +7,7 @@ class AccountsCardCreator(ft.UserControl):
     def __init__(self, accounts: dict):
         self.accounts = accounts
         self.divided_accounts_lists = list(zip_longest(*[iter(self.accounts)]*2, fillvalue=None))
+        self.number_of_rows = len(self.divided_accounts_lists)
         super().__init__()
         
     def build(self):
@@ -58,9 +59,6 @@ class SingleAccountCardCreator:
         ):
             return True
         return False
-        
-    def build(self):
-        return self.card
 
 
 class Accounts(ft.UserControl):
@@ -85,34 +83,7 @@ class Accounts(ft.UserControl):
                 ),
             ]
         )
-        dynamic_controls = []
-        if self.page.session.contains_key("MRFarmer.accounts"):
-            accounts = AccountsCardCreator(self.page.session.get("MRFarmer.accounts"))
-            dynamic_controls.append(accounts)
-        else:
-            dynamic_controls.append(
-                ft.Row(
-                    expand=6,
-                    alignment="center",
-                    controls=[ft.Text("No accounts file added yet", text_align="center")]
-                )
-            )
-        
-        self.accounts_card = ft.Card(
-            expand=12,
-            content=ft.Container(
-                margin=ft.margin.all(15),
-                content=ft.Column(
-                    controls=[
-                        self.title,
-                        ft.Divider(),
-                    ]
-                )
-            )
-        )
-        self.accounts_card.content.content.controls.extend(dynamic_controls)
-        if not self.page.session.contains_key("MRFarmer.accounts"):
-            self.accounts_card.content.height = 600
+        self.accounts_card = ft.Card(expand=12)
     
     def build(self):
         return ft.Container(
@@ -128,9 +99,9 @@ class Accounts(ft.UserControl):
         )
         
     def set_initial_values(self):
-        pass
+        self.sync_accounts()
     
-    def update_accounts(self):
+    def sync_accounts(self):
         if self.page.session.contains_key("MRFarmer.accounts"):
             ctrls = AccountsCardCreator(self.page.session.get("MRFarmer.accounts"))
             self.accounts_card.content = ft.Container(
@@ -144,13 +115,26 @@ class Accounts(ft.UserControl):
                     ]
                 )
             )
+            if ctrls.number_of_rows < 3:
+                self.accounts_card.content.height = 600
+            else:
+                pass
         else:
-            ctrls = ft.Row(
-                expand=6,
-                alignment="center",
-                controls=[ft.Text("No accounts file added yet", text_align="center")]
+            self.accounts_card.content = ft.Container(
+                height=600,
+                alignment=ft.alignment.top_center,
+                margin=ft.margin.all(15),
+                content=ft.Column(
+                    controls=[
+                        self.title,
+                        ft.Divider(),
+                        ft.Row(
+                            alignment="center",
+                            controls=[ft.Text("No accounts file added yet", text_align="center")]
+                        )
+                    ]
+                )
             )
-            self.accounts_card.content.content.controls.append(ctrls)
         self.page.update()
         
     def remove_accounts(self):
