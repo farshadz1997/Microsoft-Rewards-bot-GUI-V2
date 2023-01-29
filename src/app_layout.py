@@ -8,6 +8,7 @@ from .accounts import Accounts
 from .core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
 from .responsive_menu_layout import ResponsiveMenuLayout, create_page
 from pathlib import Path
+import json
 
 
 LIGHT_SEED_COLOR = ft.colors.BLUE
@@ -31,6 +32,7 @@ class UserInterface:
         self.page.window_resizable = False
         self.page.window_maximizable = False
         self.page.window_center()
+        self.page.on_route_change = self.on_route_change
         self.ui()
         self.page.update()
         
@@ -62,6 +64,15 @@ class UserInterface:
                 ft.OutlinedButton("No", on_click=self.no_click),
             ],
             actions_alignment="end",
+        )
+        
+        self.error_dialog = ft.AlertDialog(
+            actions=[
+                ft.ElevatedButton(
+                    text="Ok",
+                    on_click=self.close_error)
+            ],
+            actions_alignment="end"
         )
         
         self.home_page = Home(self, self.page)
@@ -150,4 +161,26 @@ class UserInterface:
         # discord
         self.page.client_storage.set("MRFarmer.discord_webhook_url", "")
         self.page.client_storage.set("MRFarmer.send_to_discord", False)
+        
+    def on_route_change(self, e):
+        if e.data == "/accounts":
+            self.page.floating_action_button.visible = True
+        else:
+            self.page.floating_action_button.visible = False
+        self.page.update()
+    
+    def display_error(self, title: str, description: str):
+        self.error_dialog.title = ft.Text(title)
+        self.error_dialog.content = ft.Text(description)
+        self.page.dialog = self.error_dialog
+        self.error_dialog.open = True
+        self.page.update()
+    
+    def close_error(self, e):
+        self.error_dialog.open = False
+        self.page.update()
+        
+    def update_accounts_file(self):
+        with open(self.page.client_storage.get("MRFarmer.accounts_path"), "w") as file:
+            file.write(json.dumps(self.page.session.get("MRFarmer.accounts"), indent = 4))
         

@@ -1,6 +1,7 @@
 import flet as ft
 from datetime import datetime
 import json
+import copy
 
 
 class Home(ft.UserControl):
@@ -217,14 +218,7 @@ class Home(ft.UserControl):
             color="red",
         )
         
-        self.error_dialog = ft.AlertDialog(
-            actions=[
-                ft.ElevatedButton(
-                    text="Ok",
-                    on_click=self.close_error)
-            ],
-            actions_alignment="end"
-        )
+        
         
     def build(self):
         return ft.Container(
@@ -262,9 +256,11 @@ class Home(ft.UserControl):
         if e.files:
             if self.is_account_file_valid(e.files[0].path):
                 self.page.client_storage.set("MRFarmer.accounts_path", e.files[0].path)
+                self.look_for_log_in_accounts()
                 self.accounts_path.value = e.files[0].path
                 if self.start_button.disabled:
                     self.start_button.disabled = False
+                self.parent.accounts_page.sync_accounts()
                 self.page.update()
                 
     def disable_start_button(self):
@@ -277,17 +273,22 @@ class Home(ft.UserControl):
             accounts: list = json.load(open(path, "r"))
             for account in accounts:
                 if not all(key in account for key in ("username", "password")):
-                    raise KeyError(f"Lookup to find either username or password in {account} failed.")
+                    error_account = copy.deepcopy(account)
+                    error_account["password"] = "*****"
+                    error_account.pop("log", None)
+                    error_account.pop("mobile_user_agent", None)
+                    error_account.pop("proxy", None)
+                    raise KeyError(f"Lookup to find either username or password in {error_account} failed.")
         except KeyError as e:
             if not on_start:
-                self.display_error("Key error", e)
+                self.parent.display_error("Key error", e)
             else:
                 self.page.client_storage.set("MRFarmer.accounts_path", "")
                 self.disable_start_button()
             return False
         except json.decoder.JSONDecodeError:
             if not on_start:
-                self.display_error("JSON error", "Selected file is not a valid JSON file. Make sure it doesn't have typo.")
+                self.parent.display_error("JSON error", "Selected file is not a valid JSON file. Make sure it doesn't have typo.")
             else:
                 self.page.client_storage.set("MRFarmer.accounts_path", "")
                 self.disable_start_button()
@@ -297,7 +298,7 @@ class Home(ft.UserControl):
             self.disable_start_button()
             return False
         else:
-            self.page.session.set("MRFarmer.accounts", accounts)
+            self.accounts = accounts
             return True
       
     def is_time_valid(self, e):
@@ -329,6 +330,7 @@ class Home(ft.UserControl):
         """Get values from client storage and set them to controls"""
         if self.is_account_file_valid(self.page.client_storage.get("MRFarmer.accounts_path"), on_start=True):
             self.accounts_path.value = self.page.client_storage.get("MRFarmer.accounts_path")
+            self.look_for_log_in_accounts()
         else:
             self.page.client_storage.set("MRFarmer_accounts_path", "")
             self.accounts_path.value = ""
@@ -341,6 +343,7 @@ class Home(ft.UserControl):
         self.accounts_path.value = ""
         self.page.client_storage.set("MRFarmer.accounts_path", "")
         self.page.session.remove("MRFarmer.accounts")
+        self.parent.accounts_page.remove_accounts()
         self.start_button.disabled = True
         self.page.update()
         
@@ -351,14 +354,28 @@ class Home(ft.UserControl):
         self.timer_field.border_color = color_scheme
         self.timer_switch.active_color = color_scheme
     
-    def display_error(self, title: str, description: str):
-        self.error_dialog.title = ft.Text(title)
-        self.error_dialog.content = ft.Text(description)
-        self.page.dialog = self.error_dialog
-        self.error_dialog.open = True
-        self.page.update()
-    
-    def close_error(self, e):
-        self.error_dialog.open = False
-        self.page.update()
-    
+    def look_for_log_in_accounts(self):
+        """check for log in account and create it if not exist for each account in accounts file"""
+        default_log_dict = {
+            "Last check": "Not farmed yet",
+            "Today's points": 0,
+            "Points": 0,
+            "Daily": False,
+            "Punch cards": False,
+            "More promotions": False,
+            "PC searches": False,
+            "Mobile searches": False
+        }
+        for account in self.accounts:
+            need_to_update = False
+            if not account.get("log", False):
+                account["log"] = default_log_dict
+                need_to_update = True
+            elif not isinstance(account["log"], dict):
+                account["log"] = default_log_dict
+                need_to_update = True
+        else:
+            self.page.session.set("MRFarmer.accounts", self.accounts)
+            if need_to_update:
+                self.parent.update_accounts_file()
+                
