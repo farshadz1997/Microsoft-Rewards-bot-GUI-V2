@@ -1,13 +1,14 @@
 import flet as ft
-from datetime import date, time
+from datetime import date
 from itertools import zip_longest
-
+from typing import Type
 
 class AccountsCardCreator(ft.UserControl):
-    def __init__(self, accounts: dict, page: ft.Page):
+    def __init__(self, accounts: dict, page: ft.Page, accounts_page):
         super().__init__()
         self.accounts = accounts
         self.page = page
+        self.accounts_page: Type[Accounts] = accounts_page
         self.divided_accounts_lists = list(zip_longest(*[iter(self.accounts)]*2, fillvalue=None))
         self.number_of_rows = len(self.divided_accounts_lists)
         
@@ -15,7 +16,7 @@ class AccountsCardCreator(ft.UserControl):
         list_of_cards = []
         column = ft.Column(expand=12)
         for accounts in self.divided_accounts_lists:
-            cards = [SingleAccountCardCreator(account, self.page).card for account in accounts if account is not None]
+            cards = [SingleAccountCardCreator(account, self.page, self.accounts_page).card for account in accounts if account is not None]
             list_of_cards.append(cards)
             
         for _list in list_of_cards:
@@ -29,9 +30,10 @@ class AccountsCardCreator(ft.UserControl):
 
 
 class SingleAccountCardCreator:
-    def __init__(self, account: dict, page: ft.Page):
+    def __init__(self, account: dict, page: ft.Page, accounts_page):
         self.account = account
         self.page = page
+        self.accounts_page: Type[Accounts] = accounts_page
         self.card_creator()
         
     def card_creator(self):
@@ -60,8 +62,16 @@ class SingleAccountCardCreator:
                                         on_click=lambda _: self.page.set_clipboard(self.account["password"])
                                     ),
                                     ft.PopupMenuItem(),
-                                    ft.PopupMenuItem(text="Edit account", icon=ft.icons.EDIT_ATTRIBUTES),
-                                    ft.PopupMenuItem(text="Delete account", icon=ft.icons.DELETE),
+                                    ft.PopupMenuItem(
+                                        text="Edit account",
+                                        icon=ft.icons.EDIT_ATTRIBUTES,
+                                        on_click=lambda e: self.accounts_page.set_value_to_fields(e, self.account)
+                                    ),
+                                    ft.PopupMenuItem(
+                                        text="Delete account",
+                                        icon=ft.icons.DELETE,
+                                        on_click=lambda _: self.accounts_page.delete_account(self.account["username"])
+                                    ),
                                 ]
                             )
                         ),
@@ -176,8 +186,10 @@ class Accounts(ft.UserControl):
         )
         
         # add account dialog
+        self.dialog_title = ft.Text("Add account", text_align="center")
+        self.save_button = ft.ElevatedButton("Save", on_click=self.add_account)
         self.add_account_dialog = ft.AlertDialog(
-            title=ft.Text("Add account", text_align="center"),
+            title=self.dialog_title,
             modal=True,
             content_padding=15,
             content=ft.Container(
@@ -201,11 +213,11 @@ class Accounts(ft.UserControl):
                 ),
             ),
             actions=[
-                ft.ElevatedButton("Add", on_click=self.add_account),
+                self.save_button,
                 ft.ElevatedButton("Cancel", on_click=self.close_dialog),
             ],
             actions_alignment="end",
-            on_dismiss=self.clean_fields
+            on_dismiss=self.reset_fields_to_default
         )
     
     def build(self):
@@ -226,7 +238,7 @@ class Accounts(ft.UserControl):
     
     def sync_accounts(self):
         if self.page.session.contains_key("MRFarmer.accounts"):
-            ctrls = AccountsCardCreator(self.page.session.get("MRFarmer.accounts"), self.page)
+            ctrls = AccountsCardCreator(self.page.session.get("MRFarmer.accounts"), self.page, self)
             self.accounts_card.content = ft.Container(
                 alignment=ft.alignment.top_center,
                 margin=ft.margin.all(15),
@@ -280,6 +292,7 @@ class Accounts(ft.UserControl):
         )
     
     def open_add_account_dialog(self, e):
+        self.dialog_title.value = "Add account"
         if not self.page.session.contains_key("MRFarmer.accounts"):
             self.parent.display_error("Accounts file not exist", "Open accounts first then try to add account")
             return
@@ -289,7 +302,7 @@ class Accounts(ft.UserControl):
         
     def close_dialog(self, e):
         self.add_account_dialog.open = False
-        self.clean_fields(e)
+        self.reset_fields_to_default(e)
         self.page.update()
         
     def field_status_update(self, value: bool, control: ft.TextField):
@@ -357,7 +370,7 @@ class Accounts(ft.UserControl):
             self.parent.update_accounts_file()
             self.close_dialog(e)
     
-    def clean_fields(self, e):
+    def reset_fields_to_default(self, e):
         fields = [
             self.email_field,
             self.password_field,
@@ -373,5 +386,62 @@ class Accounts(ft.UserControl):
         for checkbox in checkboxes:
             checkbox.value = False
         self.add_account_dialog.content.content.height = 350
+        self.dialog_title.value = "Add account"
+        self.save_button.on_click = self.add_account
         self.page.update()
+
+    def delete_account(self, account: str):
+        accounts: list = self.page.session.get("MRFarmer.accounts")
+        if len(accounts) == 1:
+            self.parent.display_error("Can't delete account", "You must have at least one account")
+            return
+        for i, acc in enumerate(accounts):
+            if acc["username"] == account:
+                accounts.pop(i)
+                break
+        self.page.session.set("MRFarmer.accounts", accounts)
+        self.sync_accounts()
+        self.parent.update_accounts_file()
+        
+    def set_value_to_fields(self, e, account: dict):
+        """Set selected account's values to fields to edit and open edit dialog"""
+        self.dialog_title.value = "Edit Account"
+        for i, acc in enumerate(self.page.session.get("MRFarmer.accounts")):
+            if acc["username"] == account["username"]:
+                self.account_index = i
+                self.save_button.on_click = lambda e: self.save_edited_account(i)
+                break
+        self.email_field.value = account["username"]
+        self.password_field.value = account["password"]
+        if "proxy" in account.keys():
+            self.proxy_field.value = account["proxy"]
+            self.proxy_check_box.value = True
+            self.proxy_field.disabled = False
+        if "mobile_user_agent" in account.keys():
+            self.mobile_user_agent_field.value = account["mobile_user_agent"]
+            self.mobile_user_agent_check_box.value = True
+            self.mobile_user_agent_field.disabled = False
+        self.page.dialog = self.add_account_dialog
+        self.add_account_dialog.open = True
+        self.page.update()
+        
+    def save_edited_account(self, index: int):
+        if self.are_fields_valid():
+            accounts = self.page.session.get("MRFarmer.accounts")
+            account = accounts[index]
+            account["username"] = self.email_field.value
+            account["password"] = self.password_field.value
+            if self.proxy_check_box.value:
+                account["proxy"] = self.proxy_field.value
+            else:
+                account.pop("proxy", None)
+            if self.mobile_user_agent_check_box.value:
+                account["mobile_user_agent"] = self.mobile_user_agent_field.value
+            else:
+                account.pop("mobile_user_agent", None)
+            accounts[index] = account
+            self.page.session.set("MRFarmer.accounts", accounts)
+            self.sync_accounts()
+            self.parent.update_accounts_file()
+            self.close_dialog(None)
         
