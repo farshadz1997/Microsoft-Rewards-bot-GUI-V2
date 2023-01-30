@@ -4,8 +4,9 @@ from .core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
 
 class Settings(ft.UserControl):
     def __init__(self, parent, page: ft.Page):
+        from .app_layout import UserInterface
         super().__init__()
-        self.parent = parent
+        self.parent: UserInterface = parent
         self.page = page
         self.color_scheme = parent.color_scheme
         self.ui()
@@ -89,33 +90,45 @@ class Settings(ft.UserControl):
         # global settings
         self.headless_switch = ft.Switch(
             label="Headless",
+            value=False,
             active_color=self.color_scheme,
             tooltip="Creates browser instance in background without GUI (NOT RECOMMENDED)",
             on_change=lambda e: self.switches_on_change(e, self.headless_switch)
         )
         self.session_switch = ft.Switch(
             label="Session",
+            value=False,
             active_color=self.color_scheme,
             tooltip="Saves browser session and cookies in accounts directory",
             on_change=lambda e: self.switches_on_change(e, self.session_switch)
         )
         self.fast_switch = ft.Switch(
             label="Fast",
+            value=False,
             active_color=self.color_scheme,
             tooltip="Reduce delays between actions",
             on_change=lambda e: self.switches_on_change(e, self.fast_switch)
         )
         self.save_errors_switch = ft.Switch(
             label="Save errors",
+            value=False,
             active_color=self.color_scheme,
             tooltip="Save errors in a txt file",
             on_change=lambda e: self.switches_on_change(e, self.save_errors_switch)
         )
         self.shutdown_switch = ft.Switch(
             label="Shutdown",
+            value=False,
             active_color=self.color_scheme,
             tooltip="Shutdown computer after farming",
             on_change=lambda e: self.switches_on_change(e, self.shutdown_switch)
+        )
+        self.edge_switch = ft.Switch(
+            label="Edge webdriver",
+            value=False,
+            active_color=self.color_scheme,
+            tooltip="Use Microsoft Edge webdriver instead of Chrome webdriver",
+            on_change=lambda e: self.switches_on_change(e, self.edge_switch)
         )
         self.global_settings = ft.Card(
             content=ft.Container(
@@ -125,7 +138,13 @@ class Settings(ft.UserControl):
                             title=ft.Text("Global settings"),
                             leading=ft.Icon(ft.icons.SETTINGS_APPLICATIONS),
                         ),
-                        ft.Row([self.headless_switch]),
+                        ft.Row(
+                            controls=[
+                                self.headless_switch,
+                                self.edge_switch
+                            ],
+                            spacing=130
+                        ),
                         ft.Row([self.session_switch]),
                         ft.Row([self.fast_switch]),
                         ft.Row([self.save_errors_switch]),
@@ -165,6 +184,7 @@ class Settings(ft.UserControl):
         )
         self.mobile_search_switch = ft.Switch(
             label="Mobile search",
+            value=True,
             active_color=self.color_scheme,
             on_change=lambda e: self.switches_on_change(e, self.mobile_search_switch)
         )
@@ -219,12 +239,13 @@ class Settings(ft.UserControl):
         self.session_switch.value = self.page.client_storage.get("MRFarmer.session")
         self.save_errors_switch.value = self.page.client_storage.get("MRFarmer.save_errors")
         self.shutdown_switch.value = self.page.client_storage.get("MRFarmer.shutdown")
+        self.edge_switch.value = self.page.client_storage.get("MRFarmer.edge_webdriver")
         # farmer settings
-        self.daily_quests_switch.value = self.page.client_storage.get("MRFarmer.daily_quests") 
-        self.punch_cards_switch.value = self.page.client_storage.get("MRFarmer.punch_cards") 
-        self.more_activities_switch.value = self.page.client_storage.get("MRFarmer.more_activities") 
-        self.pc_search_switch.value = self.page.client_storage.get("MRFarmer.pc_search") 
-        self.mobile_search_switch.value = self.page.client_storage.get("MRFarmer.mobile_search") 
+        self.daily_quests_switch.value = self.page.client_storage.get("MRFarmer.daily_quests")
+        self.punch_cards_switch.value = self.page.client_storage.get("MRFarmer.punch_cards")
+        self.more_activities_switch.value = self.page.client_storage.get("MRFarmer.more_activities")
+        self.pc_search_switch.value = self.page.client_storage.get("MRFarmer.pc_search")
+        self.mobile_search_switch.value = self.page.client_storage.get("MRFarmer.mobile_search")
         self.page.update()
     
     def clear_pc_user_agent_field(self, e):
@@ -249,6 +270,25 @@ class Settings(ft.UserControl):
         self.page.update()
     
     def switches_on_change(self, e, control: ft.Switch):
+        farmer_options = [
+            self.daily_quests_switch,
+            self.punch_cards_switch,
+            self.more_activities_switch,
+            self.pc_search_switch,
+            self.mobile_search_switch
+        ]
+        if control in farmer_options and not control.value:
+            count_of_true_controls = 0
+            for ctrl in farmer_options:
+                if ctrl.value:
+                    count_of_true_controls += 1
+                if count_of_true_controls > 1:
+                    break
+            if count_of_true_controls == 0:
+                control.value = True
+                self.page.update()
+                self.parent.display_error("Farmer settings error", "You must select at least one farmer option")
+                return
         name = control.label.lower().replace(" ", "_")
         self.page.client_storage.set(f"MRFarmer.{name}", control.value)
         

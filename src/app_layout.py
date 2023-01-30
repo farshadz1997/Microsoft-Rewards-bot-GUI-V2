@@ -33,6 +33,7 @@ class UserInterface:
         self.page.window_maximizable = False
         self.page.window_center()
         self.page.on_route_change = self.on_route_change
+        self.is_farmer_running: bool = False
         self.ui()
         self.page.update()
         
@@ -129,6 +130,7 @@ class UserInterface:
         self.settings_page.toggle_theme_mode(self.color_scheme)
         self.telegram_page.toggle_theme_mode(self.color_scheme)
         self.discord_page.toggle_theme_mode(self.color_scheme)
+        self.accounts_page.toggle_theme_mode(self.color_scheme)
         self.page.update()
         
     def first_time_setup(self):

@@ -4,8 +4,9 @@ from notifiers import get_notifier
 
 class Telegram(ft.UserControl):
     def __init__(self, parent, page: ft.Page):
+        from .app_layout import UserInterface
         super().__init__()
-        self.parent = parent
+        self.parent: UserInterface = parent
         self.page = page
         self.color_scheme = parent.color_scheme
         

@@ -2,12 +2,14 @@ import flet as ft
 from datetime import datetime
 import json
 import copy
+from .core.farmer import Farmer, WebDriver
 
 
 class Home(ft.UserControl):
     def __init__(self, parent, page: ft.Page):
+        from .app_layout import UserInterface 
         super().__init__()
-        self.parent = parent
+        self.parent: UserInterface = parent
         self.page = page
         self.color_scheme = parent.color_scheme
         
@@ -100,9 +102,9 @@ class Home(ft.UserControl):
         )
         
         # Card to display current account, points counter, section and detail
-        self.current_account_label = ft.Text("Current account")
+        self.current_account_label = ft.Text("Current account: None")
         self.current_points_label = ft.Text("Current point:")
-        self.current_points = ft.Text("0")
+        self.current_point = ft.Text("0")
         self.section_label = ft.Text("Section:")
         self.section = ft.Text("-")
         self.detail_label = ft.Text("Detail:")
@@ -119,7 +121,7 @@ class Home(ft.UserControl):
                         ft.Row(
                             controls=[
                                 self.current_points_label,
-                                self.current_points
+                                self.current_point
                             ],
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                             expand=True
@@ -159,7 +161,7 @@ class Home(ft.UserControl):
         self.locked_accounts_label = ft.Text("Locked: ")
         self.number_of_locked_accounts = ft.Text("0")
         self.suspended_accounts_label = ft.Text("Suspended: ")
-        self.number_of_supended_accounts = ft.Text("0")
+        self.number_of_suspended_accounts = ft.Text("0")
         self.overall_description_card = ft.Card(
             content=ft.Container(
                 content=ft.Column(
@@ -193,7 +195,7 @@ class Home(ft.UserControl):
                         ft.Row(
                             controls=[
                                 self.suspended_accounts_label,
-                                self.number_of_supended_accounts
+                                self.number_of_suspended_accounts
                             ],
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
                         ),
@@ -210,12 +212,15 @@ class Home(ft.UserControl):
         self.start_button = ft.ElevatedButton(
             text="Start",
             icon=ft.icons.START,
+            color="green",
+            on_click=self.start
         )
         self.stop_button = ft.ElevatedButton(
             text="Stop",
             icon=ft.icons.STOP,
             disabled=True,
             color="red",
+            on_click=self.stop
         )
         
         
@@ -334,6 +339,7 @@ class Home(ft.UserControl):
         else:
             self.page.client_storage.set("MRFarmer_accounts_path", "")
             self.accounts_path.value = ""
+            self.start_button.disabled = True
         self.accounts_path.value = self.page.client_storage.get("MRFarmer.accounts_path")
         self.timer_field.value = self.page.client_storage.get("MRFarmer.timer")
         self.timer_switch.value = self.page.client_storage.get("MRFarmer.timer_switch")
@@ -356,6 +362,7 @@ class Home(ft.UserControl):
     
     def look_for_log_in_accounts(self):
         """check for log in account and create it if not exist for each account in accounts file"""
+        need_to_update = False
         default_log_dict = {
             "Last check": "Not farmed yet",
             "Today's points": 0,
@@ -366,8 +373,9 @@ class Home(ft.UserControl):
             "PC searches": False,
             "Mobile searches": False
         }
+        if len(self.accounts) == 0:
+            self.accounts.append({"username": "your email", "password": "your password"})
         for account in self.accounts:
-            need_to_update = False
             if not account.get("log", False):
                 account["log"] = default_log_dict
                 need_to_update = True
@@ -379,3 +387,61 @@ class Home(ft.UserControl):
             if need_to_update:
                 self.parent.update_accounts_file()
                 
+    def update_section(self, message: str):
+        self.section.value = message
+        self.page.update()
+        
+    def update_detail(self, message: str):
+        self.detail.value = message
+        self.page.update()
+        
+    def update_points_counter(self, point: int):
+        self.current_point.value = str(point)
+        self.page.update()
+    
+    def update_current_account(self, account: str):
+        self.current_account_label.value = account
+        self.page.update()
+      
+    def update_overall_infos(self):
+        self.number_of_accounts.value = len(self.accounts)
+        self.number_of_finished_accounts.value = len(self.farmer.finished_accounts)
+        self.number_of_locked_accounts.value = len(self.farmer.locked_accounts)
+        self.number_of_suspended_accounts.value = len(self.farmer.suspended_accounts)
+        self.page.update()
+        
+    def start(self, e):
+        self.start_button.disabled = True
+        self.parent.is_farmer_running = True
+        self.page.floating_action_button.disabled = True
+        self.accounts_path.disabled = True
+        self.open_accounts_button.disabled = True
+        self.timer_field.disabled = True
+        self.timer_switch.disabled = True
+        self.page.update()
+        self.farmer = Farmer(self.page, self.parent, self, self.parent.accounts_page)
+        self.stop_button.disabled = False
+        self.update_overall_infos()
+        self.farmer.perform_run()
+        
+    def stop(self, e):
+        self.stop_button.disabled = True
+        self.page.update()
+        if isinstance(self.farmer.browser, WebDriver):
+            self.farmer.browser.quit()
+        self.finished()
+        
+    def finished(self):
+        self.parent.is_farmer_running = False
+        self.section.value =  "-"
+        self.detail.value = "-"
+        self.current_account_label.value = "Current account: None"
+        self.stop_button.disabled = True
+        self.start_button.disabled = False
+        self.page.floating_action_button.disabled = False
+        self.accounts_path.disabled = False
+        self.open_accounts_button.disabled = False
+        self.timer_field.disabled = False
+        self.timer_switch.disabled = False
+        self.page.update()
+        

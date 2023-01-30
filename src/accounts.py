@@ -46,7 +46,7 @@ class SingleAccountCardCreator:
                     controls=[
                         ft.ListTile(
                             title=ft.Text(self.account["username"]),
-                            leading=ft.Icon(ft.icons.ACCOUNT_CIRCLE),
+                            leading=self.get_icon(),
                             subtitle=ft.Text(self.account["log"]["Last check"]),
                             trailing=ft.PopupMenuButton(
                                 icon=ft.icons.MORE_VERT,
@@ -75,7 +75,7 @@ class SingleAccountCardCreator:
                                 ]
                             )
                         ),
-                        ft.Row([ft.Text(f'Earned points: {0}'.format(self.account.get("log").get("Today's points")))]),
+                        ft.Row([ft.Text('Earned points: {earned_points}'.format(earned_points=self.account.get("log").get("Today's points")))]),
                         ft.Row([ft.Text(f"Total points: {self.account.get('log').get('Points')}")]),
                     ]
                 )
@@ -90,12 +90,27 @@ class SingleAccountCardCreator:
             return True
         return False
     
+    def get_icon(self):
+        if self.is_farmed():
+            return ft.Icon(ft.icons.CHECK, color="green")
+        elif self.account["log"]["Last check"] == "Your account has been suspended":
+            return ft.Icon(ft.icons.WARNING, color="red")
+        elif self.account["log"]["Last check"] == "Your account has been locked":
+            return ft.Icon(ft.icons.LOCK, color=ft.colors.AMBER_500)
+        elif self.account["log"]["Last check"] == "Unusual activity detected":
+            return ft.Icon(ft.icons.WARNING, color=ft.colors.AMBER_500)
+        elif self.account["log"]["Last check"] == "Unknown error":
+            return ft.Icon(ft.icons.ERROR, color=ft.colors.AMBER_500)
+        else:
+            return ft.Icon(ft.icons.ACCOUNT_CIRCLE)
+    
 
 class Accounts(ft.UserControl):
     def __init__(self, parent, page: ft.Page):
+        from .app_layout import UserInterface
         super().__init__()
         self.page = page
-        self.parent = parent
+        self.parent: UserInterface = parent
         self.color_scheme = parent.color_scheme
         self.ui()
         self.set_initial_values()
@@ -113,12 +128,13 @@ class Accounts(ft.UserControl):
                 ),
             ]
         )
-        self.accounts_card = ft.Card(expand=12)
+        self.accounts_container = ft.Container(expand=12)
         
         # add button
         self.page.floating_action_button = ft.FloatingActionButton(
             text="Add account",
             icon=ft.icons.ADD,
+            bgcolor=self.color_scheme,
             on_click=self.open_add_account_dialog,
             visible=True if self.page.route == "/accounts" else False
         )
@@ -228,7 +244,7 @@ class Accounts(ft.UserControl):
                 alignment=ft.MainAxisAlignment.START,
                 horizontal_alignment="stretch",
                 controls=[
-                    ft.Row([self.accounts_card]),
+                    ft.Row([self.accounts_container]),
                 ],
             ),
         )
@@ -236,10 +252,20 @@ class Accounts(ft.UserControl):
     def set_initial_values(self):
         self.sync_accounts()
     
+    def toggle_theme_mode(self, color_scheme):
+        self.color_scheme = color_scheme
+        self.email_field.border_color = color_scheme
+        self.password_field.border_color = color_scheme
+        self.proxy_field.border_color = color_scheme
+        self.proxy_check_box.fill_color = color_scheme
+        self.mobile_user_agent_field.border_color = color_scheme
+        self.mobile_user_agent_check_box.fill_color = color_scheme
+        self.page.floating_action_button.bgcolor = color_scheme
+    
     def sync_accounts(self):
         if self.page.session.contains_key("MRFarmer.accounts"):
             ctrls = AccountsCardCreator(self.page.session.get("MRFarmer.accounts"), self.page, self)
-            self.accounts_card.content = ft.Container(
+            self.accounts_container.content = ft.Container(
                 alignment=ft.alignment.top_center,
                 margin=ft.margin.all(15),
                 content=ft.Column(
@@ -251,11 +277,11 @@ class Accounts(ft.UserControl):
                 )
             )
             if ctrls.number_of_rows < 3:
-                self.accounts_card.content.height = 600
+                self.accounts_container.content.height = 600
             else:
                 pass
         else:
-            self.accounts_card.content = ft.Container(
+            self.accounts_container.content = ft.Container(
                 height=600,
                 alignment=ft.alignment.top_center,
                 margin=ft.margin.all(15),
@@ -274,7 +300,7 @@ class Accounts(ft.UserControl):
         self.page.update()
         
     def remove_accounts(self):
-        self.accounts_card.content = ft.Container(
+        self.accounts_container.content = ft.Container(
             alignment=ft.alignment.top_center,
             margin=ft.margin.all(15),
             height=600,
@@ -391,6 +417,9 @@ class Accounts(ft.UserControl):
         self.page.update()
 
     def delete_account(self, account: str):
+        if self.parent.is_farmer_running:
+            self.parent.display_error("Can't delete account", "Stop farmer first then try to delete account")
+            return
         accounts: list = self.page.session.get("MRFarmer.accounts")
         if len(accounts) == 1:
             self.parent.display_error("Can't delete account", "You must have at least one account")
@@ -405,6 +434,9 @@ class Accounts(ft.UserControl):
         
     def set_value_to_fields(self, e, account: dict):
         """Set selected account's values to fields to edit and open edit dialog"""
+        if self.parent.is_farmer_running:
+            self.parent.display_error("Can't edit account", "Stop farmer first then try to edit account")
+            return
         self.dialog_title.value = "Edit Account"
         for i, acc in enumerate(self.page.session.get("MRFarmer.accounts")):
             if acc["username"] == account["username"]:

@@ -4,7 +4,9 @@ import requests
 
 class Discord(ft.UserControl):
     def __init__(self, parent, page: ft.Page):
-        self.parent = parent
+        from .app_layout import UserInterface
+        super().__init__()
+        self.parent: UserInterface = parent
         self.page = page
         self.color_scheme = parent.color_scheme
         
