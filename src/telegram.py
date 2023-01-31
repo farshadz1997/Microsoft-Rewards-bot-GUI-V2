@@ -1,5 +1,6 @@
 import flet as ft
 from notifiers import get_notifier
+from notifiers.exceptions import NotificationError
 
 
 class Telegram(ft.UserControl):
@@ -102,6 +103,7 @@ class Telegram(ft.UserControl):
             helper_text="If you want to send a test message, enter it here",
             height=80,
             expand=6,
+            on_change=self.test_message_on_change,
             error_style=ft.TextStyle(color="red"),
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
@@ -109,13 +111,20 @@ class Telegram(ft.UserControl):
                 icon_color=self.color_scheme
             ),
         )
-        self.send_test_message_button = ft.TextButton(
-            text="Send",
-            icon=ft.icons.SEND,
+        self.progress_ring = ft.ProgressRing(scale=0.75, color=self.color_scheme, visible=False)
+        self.send_icon = ft.Icon(name=ft.icons.SEND, color=self.color_scheme)
+        self.send_test_message_button = ft.ElevatedButton(
             icon_color=self.color_scheme,
             on_click=self.send_test_message,
             expand=1,
-            tooltip="Send message"
+            tooltip="Send message",
+            content=ft.Row(
+                controls=[
+                    self.progress_ring,
+                    self.send_icon,
+                    ft.Text(value="Send", text_align="center"),
+                ]
+            )
         )
         
         self.telegram_card = ft.Card(
@@ -205,7 +214,8 @@ class Telegram(ft.UserControl):
         # test message
         self.test_message_field.border_color = color_scheme
         self.test_message_field.suffix.icon_color = color_scheme
-        self.send_test_message_button.icon_color = color_scheme
+        self.send_icon.color = color_scheme
+        self.progress_ring.color = color_scheme
         
     def clear_text_fields(self, e, control: ft.TextField):
         if control.label in ["Token", "Chat ID"]:
@@ -263,11 +273,30 @@ class Telegram(ft.UserControl):
             self.page.update()
             return None
         notifier = get_notifier("telegram")
-        notifier.notify(
-            message=self.test_message_field.value,
-            token=self.token_field.value,
-            chat_id=self.chat_id_field.value
-        )
+        self.send_test_message_button.disabled = True
+        self.send_icon.visible = False
+        self.progress_ring.visible = True
+        self.page.update()
+        try:
+            notifier.notify(
+                message=self.test_message_field.value,
+                token=self.token_field.value,
+                chat_id=self.chat_id_field.value,
+                raise_on_errors=True
+            )
+        except NotificationError as e:
+            self.parent.open_snack_bar(f"Couldn't send test message {e}")
+        else:
+            self.parent.open_snack_bar(f"Test message sent successfully")
+        self.send_test_message_button.disabled = False
+        self.send_icon.visible = True
+        self.progress_ring.visible = False
+        self.page.update()
+        
+    def test_message_on_change(self, e):
+        if self.test_message_field.value != "" and self.test_message_field.error_text:
+            self.test_message_field.error_text = None
+            self.page.update()
            
     def are_telegram_fields_filled(self):
         telegram_fields = [self.token_field, self.chat_id_field]

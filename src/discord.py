@@ -1,5 +1,6 @@
 import flet as ft
 import requests
+import time
 
 
 class Discord(ft.UserControl):
@@ -64,6 +65,7 @@ class Discord(ft.UserControl):
             border_color=self.color_scheme,
             expand=6,
             height=85,
+            on_change=self.test_message_on_change,
             error_style=ft.TextStyle(color="red"),
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
@@ -72,12 +74,19 @@ class Discord(ft.UserControl):
                 on_click=lambda e: self.clear_field(e, self.test_message_field),
             )
         )
-        self.send_message_button = ft.TextButton(
-            text="Send",
-            icon=ft.icons.SEND,
+        self.progress_ring = ft.ProgressRing(scale=0.7, color=self.color_scheme, visible=False)
+        self.send_icon = ft.Icon(ft.icons.SEND)
+        self.send_message_button = ft.ElevatedButton(
             expand=1,
             icon_color=self.color_scheme,
             on_click=self.send_message,
+            content=ft.Row(
+                controls=[
+                    self.progress_ring,
+                    self.send_icon,
+                    ft.Text(value="Send", text_align="center", expand=True)
+                ]
+            ),
         )
         self.discord_card = ft.Card(
             expand=12,
@@ -159,7 +168,8 @@ class Discord(ft.UserControl):
         self.save_button.icon_color = color_scheme
         # test message
         self.test_message_field.border_color = color_scheme
-        self.send_message_button.icon_color = color_scheme
+        self.send_icon.color = color_scheme
+        self.progress_ring.color = color_scheme
         
     
     def clear_field(self, e, control: ft.TextField):
@@ -211,9 +221,24 @@ class Discord(ft.UserControl):
                 self.test_message_field.error_text = "This field is required"
                 self.page.update()
                 return None
+            self.progress_ring.visible = True
+            self.send_icon.visible = False
+            self.send_message_button.disabled = True
+            self.page.update()
             response = requests.post(self.webhook_field.value, json={"content": self.test_message_field.value})
-            if response.status_code == 204: # TODO: add error handler
-                pass
+            if response.status_code == 204:
+                self.parent.open_snack_bar("Test message sent successfully")
+            else:
+                self.parent.open_snack_bar(f"Couldn't send message with status code {response.status_code}")
+            self.send_message_button.disabled = False
+            self.progress_ring.visible = False
+            self.send_icon.visible = True
+            self.page.update()
+            
+    def test_message_on_change(self, e):
+        if self.test_message_field.error_text and self.test_message_field.value != "":
+            self.test_message_field.error_text = None
+            self.page.update()
         
     def is_webhook_url_filled(self):
         if self.webhook_field.value == "":

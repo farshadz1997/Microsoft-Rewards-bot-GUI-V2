@@ -209,21 +209,33 @@ class Home(ft.UserControl):
         )
         
         # Start and stop buttons
+        self.start_progress_ring = ft.ProgressRing(color="green", scale=0.75, visible=False)
+        self.start_icon = ft.Icon(ft.icons.START, color="green")
         self.start_button = ft.ElevatedButton(
-            text="Start",
-            icon=ft.icons.START,
-            color="green",
-            on_click=self.start
+            on_click=self.start,
+            scale=1.3,
+            content=ft.Row(
+                controls=[
+                    self.start_progress_ring,
+                    self.start_icon,
+                    ft.Text("Start", color="green", text_align="center")
+                ]
+            )
         )
+        self.stop_progress_ring = ft.ProgressRing(color="red", scale=0.75, visible=False)
+        self.stop_icon = ft.Icon(ft.icons.STOP, color="red")
         self.stop_button = ft.ElevatedButton(
-            text="Stop",
-            icon=ft.icons.STOP,
             disabled=True,
-            color="red",
-            on_click=self.stop
+            scale=1.3,
+            on_click=self.stop,
+            content=ft.Row(
+                controls=[
+                    self.stop_progress_ring,
+                    self.stop_icon,
+                    ft.Text("Stop", color="red", text_align="center")
+                ]
+            )
         )
-        
-        
         
     def build(self):
         return ft.Container(
@@ -249,9 +261,10 @@ class Home(ft.UserControl):
                                 self.stop_button,
                                 self.start_button
                             ],
+                            spacing=40,
                             alignment=ft.MainAxisAlignment.CENTER
                         ),
-                        margin=ft.margin.symmetric(vertical=25)
+                        margin=ft.margin.symmetric(vertical=20)
                     )
                 ]
             )
@@ -273,7 +286,7 @@ class Home(ft.UserControl):
         self.page.update()
     
     def is_account_file_valid(self, path, on_start: bool = False):
-        """Check to see wheather selected file json readable or not to display error"""
+        '''Check to see wheather selected file json readable or not to display error if all good then set account to self.accounts'''
         try:
             accounts: list = json.load(open(path, "r"))
             for account in accounts:
@@ -361,7 +374,7 @@ class Home(ft.UserControl):
         self.timer_switch.active_color = color_scheme
     
     def look_for_log_in_accounts(self):
-        """check for log in account and create it if not exist for each account in accounts file"""
+        """check for log in account and create it if not exist for each account in accounts file then save accounts in session"""
         need_to_update = False
         default_log_dict = {
             "Last check": "Not farmed yet",
@@ -418,14 +431,21 @@ class Home(ft.UserControl):
         self.open_accounts_button.disabled = True
         self.timer_field.disabled = True
         self.timer_switch.disabled = True
+        self.start_icon.visible = False
+        self.start_progress_ring.visible = True
         self.page.update()
         self.farmer = Farmer(self.page, self.parent, self, self.parent.accounts_page)
         self.stop_button.disabled = False
         self.update_overall_infos()
+        self.start_icon.visible = True
+        self.start_progress_ring.visible = False
+        self.page.update()
         self.farmer.perform_run()
         
     def stop(self, e):
         self.stop_button.disabled = True
+        self.stop_progress_ring.visible = True
+        self.stop_icon.visible = False
         self.page.update()
         if isinstance(self.farmer.browser, WebDriver):
             self.farmer.browser.quit()
@@ -443,5 +463,7 @@ class Home(ft.UserControl):
         self.open_accounts_button.disabled = False
         self.timer_field.disabled = False
         self.timer_switch.disabled = False
+        self.stop_progress_ring.visible = False
+        self.stop_icon.visible = True
         self.page.update()
         
