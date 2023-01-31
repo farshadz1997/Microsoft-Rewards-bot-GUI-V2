@@ -45,7 +45,7 @@ class SingleAccountCardCreator:
                     expand=3,
                     controls=[
                         ft.ListTile(
-                            title=ft.Text(self.account["username"]),
+                            title=ft.Text(self.account["username"], size=14),
                             leading=self.get_icon(),
                             subtitle=ft.Text(self.account["log"]["Last check"]),
                             trailing=ft.PopupMenuButton(
@@ -70,7 +70,7 @@ class SingleAccountCardCreator:
                                     ft.PopupMenuItem(
                                         text="Delete account",
                                         icon=ft.icons.DELETE,
-                                        on_click=lambda _: self.accounts_page.delete_account(self.account["username"])
+                                        on_click=lambda _: self.accounts_page.open_delete_dialog(self.account["username"])
                                     ),
                                 ]
                             )
@@ -201,7 +201,7 @@ class Accounts(ft.UserControl):
             )
         )
         
-        # add account dialog
+        # add/edit account dialog
         self.dialog_title = ft.Text("Add account", text_align="center")
         self.save_button = ft.ElevatedButton("Save", on_click=self.add_account)
         self.add_account_dialog = ft.AlertDialog(
@@ -230,10 +230,25 @@ class Accounts(ft.UserControl):
             ),
             actions=[
                 self.save_button,
-                ft.ElevatedButton("Cancel", on_click=self.close_dialog),
+                ft.ElevatedButton("Cancel", on_click=self.close_account_dialog),
             ],
             actions_alignment="end",
             on_dismiss=self.reset_fields_to_default
+        )
+        
+        self.confirm_delete_button = ft.ElevatedButton(text="Yes")
+        self.delete_dialog = ft.AlertDialog(
+            title=ft.Text("Confirm delete"),
+            modal=True,
+            content=ft.Text("Do you really want to delete the account?"),
+            actions=[
+                self.confirm_delete_button,
+                ft.ElevatedButton(
+                    text="No",
+                    on_click=self.close_delete_dialog
+                )
+            ],
+            actions_alignment="end",
         )
     
     def build(self):
@@ -326,7 +341,7 @@ class Accounts(ft.UserControl):
         self.add_account_dialog.open = True
         self.page.update()
         
-    def close_dialog(self, e):
+    def close_account_dialog(self, e):
         self.add_account_dialog.open = False
         self.reset_fields_to_default(e)
         self.page.update()
@@ -364,6 +379,7 @@ class Accounts(ft.UserControl):
         return is_valid
     
     def check_field(self, control: ft.TextField):
+        """Check fields in add/edit account for error and remove the error text and reduce height of dialog"""
         if control.value and control.error_text:
             control.error_text = None
             self.add_account_dialog.content.content.height -= 25
@@ -394,7 +410,7 @@ class Accounts(ft.UserControl):
             self.page.session.set("MRFarmer.accounts", accounts)
             self.sync_accounts()
             self.parent.update_accounts_file()
-            self.close_dialog(e)
+            self.close_account_dialog(e)
     
     def reset_fields_to_default(self, e):
         fields = [
@@ -416,10 +432,21 @@ class Accounts(ft.UserControl):
         self.save_button.on_click = self.add_account
         self.page.update()
 
-    def delete_account(self, account: str):
+    def open_delete_dialog(self, account: str):
         if self.parent.is_farmer_running:
             self.parent.display_error("Can't delete account", "Stop farmer first then try to delete account")
             return
+        self.page.dialog = self.delete_dialog
+        self.confirm_delete_button.on_click = lambda _: self.delete_account(account)
+        self.delete_dialog.open = True
+        self.page.update()
+        
+    def close_delete_dialog(self, e):
+        self.delete_dialog.open = False
+        self.page.update()
+    
+    def delete_account(self, account: str):
+        self.close_delete_dialog(None)
         accounts: list = self.page.session.get("MRFarmer.accounts")
         if len(accounts) == 1:
             self.parent.display_error("Can't delete account", "You must have at least one account")
@@ -475,5 +502,5 @@ class Accounts(ft.UserControl):
             self.page.session.set("MRFarmer.accounts", accounts)
             self.sync_accounts()
             self.parent.update_accounts_file()
-            self.close_dialog(None)
+            self.close_account_dialog(None)
         
