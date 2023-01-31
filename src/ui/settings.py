@@ -1,5 +1,5 @@
 import flet as ft
-from .core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
+from ..core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
 
 
 class Settings(ft.UserControl):
@@ -209,6 +209,8 @@ class Settings(ft.UserControl):
             expand=3,
         )
         
+        # Change Theme
+        
     
     def build(self):
         return ft.Container(
@@ -312,3 +314,16 @@ class Settings(ft.UserControl):
         self.pc_search_switch.active_color = color_scheme
         self.mobile_search_switch.active_color = color_scheme
     
+    def get_all_flet_colors(self):
+        self.flet_colors = {}
+    
+    def color_option_creator(self, color: str):
+        return ft.Container(
+            bgcolor=color,
+            border_radius=ft.border_radius.all(50),
+            height=10,
+            width=10,
+            padding=ft.padding.all(5),
+            alignment=ft.alignment.center,
+            data=color
+        )

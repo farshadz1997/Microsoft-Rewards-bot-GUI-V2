@@ -40,9 +40,9 @@ class Farmer:
     base_url = "https://rewards.microsoft.com"
     
     def __init__(self, page: ft.Page, parent, home_page, accounts_page):
-        from ..app_layout import UserInterface
-        from ..home import Home
-        from ..accounts import Accounts
+        from ..ui.app_layout import UserInterface
+        from ..ui.home import Home
+        from ..ui.accounts import Accounts
         
         self.page = page
         self.parent: UserInterface = parent

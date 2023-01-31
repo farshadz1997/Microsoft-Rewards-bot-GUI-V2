@@ -36,7 +36,6 @@ class Telegram(ft.UserControl):
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
                 on_click=lambda e: self.clear_text_fields(e, self.token_field),
-                icon_color=self.color_scheme
             ),
             on_change=lambda e: self.text_fields_on_change(e, self.token_field),
             error_style=ft.TextStyle(color="red")
@@ -61,7 +60,6 @@ class Telegram(ft.UserControl):
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
                 on_click=lambda e: self.clear_text_fields(e, self.chat_id_field),
-                icon_color=self.color_scheme
             ),
             on_change=lambda e: self.text_fields_on_change(e, self.chat_id_field),
             error_style=ft.TextStyle(color="red")
@@ -108,7 +106,6 @@ class Telegram(ft.UserControl):
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
                 on_click=lambda e: self.clear_text_fields(e, self.test_message_field),
-                icon_color=self.color_scheme
             ),
         )
         self.progress_ring = ft.ProgressRing(scale=0.75, color=self.color_scheme, visible=False)
@@ -201,11 +198,9 @@ class Telegram(ft.UserControl):
         self.color_scheme = color_scheme
         # token
         self.token_field.border_color = color_scheme
-        self.token_field.suffix.icon_color = color_scheme
         self.token_paste_button.icon_color = color_scheme
         # chat id
         self.chat_id_field.border_color = color_scheme
-        self.chat_id_field.suffix.icon_color = color_scheme
         self.chat_id_paste_button.icon_color = color_scheme
         # switch & buttons
         self.send_to_telegram_switch.active_color = color_scheme
@@ -213,7 +208,6 @@ class Telegram(ft.UserControl):
         self.save_button.icon_color = color_scheme
         # test message
         self.test_message_field.border_color = color_scheme
-        self.test_message_field.suffix.icon_color = color_scheme
         self.send_icon.color = color_scheme
         self.progress_ring.color = color_scheme
         

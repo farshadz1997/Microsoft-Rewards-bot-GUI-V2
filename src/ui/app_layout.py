@@ -5,13 +5,13 @@ from .settings import Settings
 from .telegram import Telegram
 from .discord import Discord
 from .accounts import Accounts
-from .core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
+from ..core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
 from .responsive_menu_layout import ResponsiveMenuLayout, create_page
 from pathlib import Path
 import json
 
 
-LIGHT_SEED_COLOR = ft.colors.BLUE
+LIGHT_SEED_COLOR = ft.colors.TEAL
 DARK_SEED_COLOR = ft.colors.INDIGO
 
 class UserInterface:
@@ -24,7 +24,7 @@ class UserInterface:
         if not self.page.client_storage.get("MRFarmer.has_run_before"):
             self.first_time_setup()
         self.page.theme_mode = self.page.client_storage.get("MRFarmer.theme_mode")
-        self.color_scheme = ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300
+        self.color_scheme = ft.colors.TEAL if self.page.theme_mode == "light" else ft.colors.INDIGO_300
         self.page.theme = theme.Theme(color_scheme_seed=LIGHT_SEED_COLOR)
         self.page.dark_theme = theme.Theme(color_scheme_seed=DARK_SEED_COLOR)
         self.page.window_height = 820
@@ -47,7 +47,7 @@ class UserInterface:
         )
         
         self.page.appbar = ft.AppBar(
-            title=ft.Text("Microsoft Rewards Farmer"),
+            title=ft.Text("Microsoft Rewards Farmer", font_family="Pacifico"),
             leading=menu_button,
             leading_width=40,
             bgcolor=ft.colors.SURFACE_VARIANT,
@@ -75,6 +75,9 @@ class UserInterface:
             ],
             actions_alignment="end"
         )
+        
+        self.snack_bar_message = ft.Text()
+        self.page.snack_bar = ft.SnackBar(content=self.snack_bar_message, bgcolor=self.color_scheme)
         
         self.home_page = Home(self, self.page)
         self.settings_page = Settings(self, self.page)
@@ -108,7 +111,6 @@ class UserInterface:
         menu_button.on_click = lambda e: menu_layout.toggle_navigation()
         self.page.add(menu_layout)
         
-        
     def window_event(self, e):
         if e.data == "close":
             self.page.dialog = self.exit_dialog
@@ -122,7 +124,8 @@ class UserInterface:
     def toggle_theme_mode(self, e):
         self.page.theme_mode = "dark" if self.page.theme_mode == "light" else "light"
         self.page.client_storage.set("MRFarmer.theme_mode", self.page.theme_mode)
-        self.color_scheme = ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300
+        self.color_scheme = ft.colors.TEAL if self.page.theme_mode == "light" else ft.colors.INDIGO_300
+        self.page.snack_bar.bgcolor = self.color_scheme
         self.toggle_theme_button.icon = (
             ft.icons.MODE_NIGHT if self.page.theme_mode == "light" else ft.icons.WB_SUNNY_ROUNDED
         )
@@ -176,6 +179,11 @@ class UserInterface:
         self.error_dialog.content = ft.Text(description)
         self.page.dialog = self.error_dialog
         self.error_dialog.open = True
+        self.page.update()
+        
+    def open_snack_bar(self, message: str):
+        self.snack_bar_message.value = message
+        self.page.snack_bar.open = True
         self.page.update()
     
     def close_error(self, e):

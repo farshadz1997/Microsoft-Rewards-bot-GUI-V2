@@ -2,7 +2,7 @@ import flet as ft
 from datetime import datetime
 import json
 import copy
-from .core.farmer import Farmer, WebDriver
+from ..core.farmer import Farmer, WebDriver
 
 
 class Home(ft.UserControl):
@@ -26,7 +26,7 @@ class Home(ft.UserControl):
             label="Accounts Path",
             height=75,
             icon=ft.icons.FILE_OPEN,
-            border_color=ft.colors.BLUE_300 if self.page.theme_mode == "light" else ft.colors.INDIGO_300,
+            border_color=self.color_scheme,
             read_only=True,
             multiline=False,
             expand=5,
@@ -209,8 +209,8 @@ class Home(ft.UserControl):
         )
         
         # Start and stop buttons
-        self.start_progress_ring = ft.ProgressRing(color="green", scale=0.75, visible=False)
-        self.start_icon = ft.Icon(ft.icons.START, color="green")
+        self.start_progress_ring = ft.ProgressRing(color="blue", scale=0.75, visible=False)
+        self.start_icon = ft.Icon(ft.icons.START, color="blue")
         self.start_button = ft.ElevatedButton(
             on_click=self.start,
             scale=1.3,
@@ -218,7 +218,7 @@ class Home(ft.UserControl):
                 controls=[
                     self.start_progress_ring,
                     self.start_icon,
-                    ft.Text("Start", color="green", text_align="center")
+                    ft.Text("Start", color="blue", text_align="center")
                 ]
             )
         )

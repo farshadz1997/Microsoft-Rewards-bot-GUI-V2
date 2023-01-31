@@ -29,7 +29,6 @@ class Discord(ft.UserControl):
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
                 icon_size=14,
-                icon_color=self.color_scheme,
                 on_click=lambda e: self.clear_field(e, self.webhook_field),
             )
         )
@@ -70,7 +69,6 @@ class Discord(ft.UserControl):
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
                 icon_size=14,
-                icon_color=self.color_scheme,
                 on_click=lambda e: self.clear_field(e, self.test_message_field),
             )
         )
@@ -160,7 +158,6 @@ class Discord(ft.UserControl):
         self.color_scheme = color_scheme
         # webhook field
         self.webhook_field.border_color = color_scheme
-        self.webhook_field.suffix.icon_color = color_scheme
         self.paste_button.icon_color = color_scheme
         # witch and buttons
         self.discord_switch.active_color = color_scheme
