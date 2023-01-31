@@ -66,61 +66,79 @@ class Farmer:
     def create_message(self):
         """Create message from logs to send to Telegram"""
         today = date.today().strftime("%d/%m/%Y")
+        total_earned = 0
         message = f'📅 Daily report {today}\n\n'
-        for index, value in enumerate(self.accounts, 1):
+        for index, account in enumerate(self.accounts, 1):
             redeem_message = None
-            if value[1].get("Redeem goal title", None):
-                redeem_title = value[1].get("Redeem goal title", None)
-                redeem_price = value[1].get("Redeem goal price")
-                redeem_count = value[1]["Points"] // redeem_price
+            if account["log"].get("Redeem goal title", None):
+                redeem_title = account["log"].get("Redeem goal title", None)
+                redeem_price = account["log"].get("Redeem goal price")
+                redeem_count = account["log"]["Points"] // redeem_price
                 if redeem_count > 1:
                     redeem_message = f"🎁 Ready to redeem: {redeem_title} for {redeem_price} points ({redeem_count}x)\n\n"
                 else:
                     redeem_message = f"🎁 Ready to redeem: {redeem_title} for {redeem_price} points\n\n"
-            if value[1]['Last check'] == str(date.today()):
+            if account["log"]['Last check'] == str(date.today()):
                 status = '✅ Farmed'
-                new_points = value[1]["Today's points"]
-                total_points = value[1]["Points"]
-                message += f"{index}. {value[0]}\n📝 Status: {status}\n⭐️ Earned points: {new_points}\n🏅 Total points: {total_points}\n"
+                new_points = account["log"]["Today's points"]
+                total_earned += new_points
+                total_points = account["log"]["Points"]
+                message += f"{index}. {account['username']}\n📝 Status: {status}\n⭐️ Earned points: {new_points}\n🏅 Total points: {total_points}\n"
                 if redeem_message:
                     message += redeem_message
                 else:
                     message += "\n"
-            elif value[1]['Last check'] == 'Your account has been suspended':
+            elif account["log"]['Last check'] == 'Your account has been suspended':
                 status = '❌ Suspended'
-                message += f"{index}. {value[0]}\n📝 Status: {status}\n\n"
-            elif value[1]['Last check'] == 'Your account has been locked':
+                message += f"{index}. {account['username']}\n📝 Status: {status}\n\n"
+            elif account["log"]['Last check'] == 'Your account has been locked':
                 status = '⚠️ Locked'
-                message += f"{index}. {value[0]}\n📝 Status: {status}\n\n"
-            elif value[1]['Last check'] == 'Unusual activity detected':
+                message += f"{index}. {account['username']}\n📝 Status: {status}\n\n"
+            elif account["log"]['Last check'] == 'Unusual activity detected':
                 status = '⚠️ Unusual activity detected'
-                message += f"{index}. {value[0]}\n📝 Status: {status}\n\n"
-            elif value[1]['Last check'] == 'Unknown error':
+                message += f"{index}. {account['username']}\n📝 Status: {status}\n\n"
+            elif account["log"]['Last check'] == 'Unknown error':
                 status = '⛔️ Unknow error occured'
-                message += f"{index}. {value[0]}\n📝 Status: {status}\n\n"
+                message += f"{index}. {account['username']}\n📝 Status: {status}\n\n"
             else:
-                status = f'Farmed on {value[1]["Last check"]}'
-                new_points = value[1]["Today's points"]
-                total_points = value[1]["Points"]
-                message += f"{index}. {value[0]}\n📝 Status: {status}\n⭐️ Earned points: {new_points}\n🏅 Total points: {total_points}\n"
+                status = f'Farmed on {account["log"]["Last check"]}'
+                new_points = account["log"]["Today's points"]
+                total_earned += new_points
+                total_points = account["log"]["Points"]
+                message += f"{index}. {account['username']}\n📝 Status: {status}\n⭐️ Earned points: {new_points}\n🏅 Total points: {total_points}\n"
                 if redeem_message:
                     message += redeem_message
                 else:
                     message += "\n"
+        message += f"💵 Total earned points: {total_earned} (${total_earned/1300:0.02f}) (€{total_earned/1500:0.02f})"
         return message
 
-    def send_report_to_messenger(self, message):
+    def send_report_to_messenger(self, message: str):
         if self.page.client_storage.get("MRFarmer.send_to_telegram"):
-            t = get_notifier('telegram')
-            token = self.page.client_storage.get("MRFarmer.telegram_token")
-            chat_id = self.page.client_storage.get("MRFarmer.telegram_chat_id")
-            t.notify(message=message, token=token, chat_id=chat_id)
+            self.send_to_telegram(message)
         if self.page.client_storage.get("MRFarmer.send_to_discord"):
-            webhook_url = self.page.client_storage.get("MRFarmer.discord_webhook_url")
+            self.send_to_discord(message)
+            
+    def send_to_telegram(self, message: str):
+        t = get_notifier('telegram')
+        token = self.page.client_storage.get("MRFarmer.telegram_token")
+        chat_id = self.page.client_storage.get("MRFarmer.telegram_chat_id")
+        t.notify(message=message, token=token, chat_id=chat_id)
+        
+    def send_to_discord(self, message: str):
+        webhook_url = self.page.client_storage.get("MRFarmer.discord_webhook_url")
+        if len(message) > 2000:
+            messages = [message[i:i+2000] for i in range(0, len(message), 2000)]
+            for ms in messages:
+                content = {"username": "⭐️ Microsoft Rewards Bot ⭐️", "content": ms}
+                response = requests.post(webhook_url, json=content)
+        else:
             content = {"username": "⭐️ Microsoft Rewards Bot ⭐️", "content": message}
-            response = requests.post(webhook_url, json=content)
-            if response.status_code == 204:
-                pass
+            response = requests.post(webhook_url, json=content) 
+        if response.status_code == 204:
+            pass
+        else:
+            self.parent.open_snack_bar(f"Couldn't send report message to your Discord with status code {response.status_code}")
             
     def check_internet_connection(self):
         system = platform.system()
@@ -187,7 +205,7 @@ class Farmer:
         for account in accounts:
             account["log"].pop("Redeem goal title", None)
             account["log"].pop("Redeem goal price", None)
-        self.page.client_storage.set("MRFarmer.accounts", accounts)
+        self.page.session.set("MRFarmer.accounts", accounts)
         self.parent.update_accounts_file()
         
     def clean_logs(self):
@@ -1225,8 +1243,9 @@ class Farmer:
         if self.page.client_storage.get("MRFarmer.timer_switch"):
             requested_time = self.page.client_storage.get("MRFarmer.timer")
             self.home_page.update_section(f"Waiting for {requested_time}")
+            self.home_page.update_overall_infos()
             while datetime.now().strftime("%H:%M") != requested_time:
-                if not self.is_running:
+                if not self.parent.is_farmer_running:
                     return None
                 time.sleep(1)
             else:
@@ -1261,7 +1280,7 @@ class Farmer:
                         self.points_counter = self.starting_points
                         self.home_page.update_points_counter(self.points_counter)
 
-                        if self.page.session.get("MRFarmer.daily_quests") and not account["log"]["Daily"]:
+                        if self.page.client_storage.get("MRFarmer.daily_quests") and not account["log"]["Daily"]:
                             self.complete_daily_set()
                             self.home_page.update_points_counter(self.points_counter)
 
