@@ -2,6 +2,10 @@ import flet as ft
 from datetime import date
 from itertools import zip_longest
 from typing import Type
+from pathlib import Path
+import time
+from ..core.farmer import Farmer, SessionNotCreatedException, WebDriverException
+
 
 class AccountsCardCreator(ft.UserControl):
     def __init__(self, accounts: dict, page: ft.Page, accounts_page):
@@ -33,10 +37,44 @@ class SingleAccountCardCreator:
     def __init__(self, account: dict, page: ft.Page, accounts_page):
         self.account = account
         self.page = page
+        self.accounts_path = accounts_page.accounts_path
         self.accounts_page: Type[Accounts] = accounts_page
         self.card_creator()
         
     def card_creator(self):
+        popup_items = [
+            ft.PopupMenuItem(
+                text="Copy Email",
+                icon=ft.icons.COPY,
+                on_click=lambda _: self.page.set_clipboard(self.account["username"])
+            ),
+            ft.PopupMenuItem(
+                text="Copy password",
+                icon=ft.icons.COPY,
+                on_click=lambda _: self.page.set_clipboard(self.account["password"])
+            ),
+            ft.PopupMenuItem(),
+            ft.PopupMenuItem(
+                text="Edit account",
+                icon=ft.icons.EDIT_ATTRIBUTES,
+                on_click=lambda e: self.accounts_page.set_value_to_fields(e, self.account)
+            ),
+            ft.PopupMenuItem(
+                text="Delete account",
+                icon=ft.icons.DELETE,
+                on_click=lambda _: self.accounts_page.open_delete_dialog(self.account["username"])
+            ),
+        ]
+        if self.is_session_exist():
+            popup_items.append(ft.PopupMenuItem())
+            popup_items.append(
+                ft.PopupMenuItem(
+                    text="Session browser",
+                    icon=ft.icons.OPEN_IN_BROWSER,
+                    on_click=lambda _: self.accounts_page.open_session_browser(self.account)
+                )
+            )
+            
         self.card = ft.Card(
             expand=4,
             content=ft.Container(
@@ -50,29 +88,7 @@ class SingleAccountCardCreator:
                             subtitle=ft.Text(self.account["log"]["Last check"]),
                             trailing=ft.PopupMenuButton(
                                 icon=ft.icons.MORE_VERT,
-                                items=[
-                                    ft.PopupMenuItem(
-                                        text="Copy Email",
-                                        icon=ft.icons.COPY,
-                                        on_click=lambda _: self.page.set_clipboard(self.account["username"])
-                                    ),
-                                    ft.PopupMenuItem(
-                                        text="Copy password",
-                                        icon=ft.icons.COPY,
-                                        on_click=lambda _: self.page.set_clipboard(self.account["password"])
-                                    ),
-                                    ft.PopupMenuItem(),
-                                    ft.PopupMenuItem(
-                                        text="Edit account",
-                                        icon=ft.icons.EDIT_ATTRIBUTES,
-                                        on_click=lambda e: self.accounts_page.set_value_to_fields(e, self.account)
-                                    ),
-                                    ft.PopupMenuItem(
-                                        text="Delete account",
-                                        icon=ft.icons.DELETE,
-                                        on_click=lambda _: self.accounts_page.open_delete_dialog(self.account["username"])
-                                    ),
-                                ]
+                                items=popup_items
                             )
                         ),
                         ft.Row([ft.Text('Earned points: {earned_points}'.format(earned_points=self.account.get("log").get("Today's points")))]),
@@ -103,7 +119,11 @@ class SingleAccountCardCreator:
             return ft.Icon(ft.icons.ERROR, color=ft.colors.AMBER_500)
         else:
             return ft.Icon(ft.icons.ACCOUNT_CIRCLE)
-    
+        
+    def is_session_exist(self):
+        if Path(f"{self.accounts_path.parent}/Profiles/{self.account['username']}/PC").exists():
+            return True
+        return False
 
 class Accounts(ft.UserControl):
     def __init__(self, parent, page: ft.Page):
@@ -112,6 +132,7 @@ class Accounts(ft.UserControl):
         self.page = page
         self.parent: UserInterface = parent
         self.color_scheme = parent.color_scheme
+        self.accounts_path = Path(page.client_storage.get("MRFarmer.accounts_path"))
         self.ui()
         self.set_initial_values()
         self.page.update()
@@ -249,6 +270,19 @@ class Accounts(ft.UserControl):
                 )
             ],
             actions_alignment="end",
+        )
+        self.browser_running_dialog = ft.AlertDialog(
+            title=ft.Text("Browser running"),
+            modal=True,
+            content=ft.Text("Press ok when you done browsing to close browser."),
+            actions=[
+                ft.ElevatedButton(
+                    text="Ok",
+                    on_click=self.close_browser_dialog
+                )
+            ],
+            on_dismiss=self.close_browser_dialog,
+            actions_alignment="center"
         )
     
     def build(self):
@@ -503,4 +537,27 @@ class Accounts(ft.UserControl):
             self.sync_accounts()
             self.parent.update_accounts_file()
             self.close_account_dialog(None)
+    
+    def open_session_browser(self, account: dict):
+        """Open session browser and dialog for account"""
+        if self.parent.is_farmer_running:
+            self.parent.display_error("Can't open browser", "Stop farmer first then try to open browser")
+            return
+        self.page.session.set("MRFarmer.browser_running", True)
+        self.page.dialog = self.browser_running_dialog
+        self.browser_running_dialog.open = True
+        self.page.update()
+        try:
+            Farmer.account_browser(self.page, account, self)
+        except (SessionNotCreatedException, WebDriverException):
+            self.close_browser_dialog(None)
+            time.sleep(1)
+            self.page.session.set("MRFarmer.browser_running", False)
+            self.parent.display_error("Webdriver error", "Webdriver not found or outdated. Please update your webdriver.")
+            return
+            
+    def close_browser_dialog(self, e):
+        self.page.session.set("MRFarmer.browser_running", False)
+        self.browser_running_dialog.open = False
+        self.page.update()
         

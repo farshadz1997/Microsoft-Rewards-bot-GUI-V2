@@ -6,7 +6,7 @@ from .telegram import Telegram
 from .discord import Discord
 from .accounts import Accounts
 from ..core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
-from .responsive_menu_layout import ResponsiveMenuLayout, create_page
+from .responsive_menu_layout import ResponsiveMenuLayout
 from pathlib import Path
 import json
 
@@ -138,7 +138,7 @@ class UserInterface:
         
     def first_time_setup(self):
         """If it's the first time that app being used, it sets the default values to client storage"""
-        directory_path = Path(__file__).parent.parent
+        directory_path = Path.cwd()
         accounts_path = str(Path(f"{directory_path}\\accounts.json").resolve())
         self.page.client_storage.set("MRFarmer.has_run_before", True)
         self.page.client_storage.set("MRFarmer.theme_mode", "dark")
@@ -147,13 +147,18 @@ class UserInterface:
         self.page.client_storage.set("MRFarmer.timer", "00:00")
         self.page.client_storage.set("MRFarmer.timer_switch", False)
         # settings
+        ## user agent
         self.page.client_storage.set("MRFarmer.pc_user_agent", PC_USER_AGENT)
         self.page.client_storage.set("MRFarmer.mobile_user_agent", MOBILE_USER_AGENT)
+        ## global settings
         self.page.client_storage.set("MRFarmer.headless", False)
         self.page.client_storage.set("MRFarmer.fast", False)
         self.page.client_storage.set("MRFarmer.session", False)
         self.page.client_storage.set("MRFarmer.save_errors", False)
         self.page.client_storage.set("MRFarmer.shutdown", False)
+        self.page.client_storage.set("MRFarmer.edge_webdriver", False)
+        self.page.client_storage.set("MRFarmer.use_proxy", False)
+        ## farmer settings
         self.page.client_storage.set("MRFarmer.daily_quests", True)
         self.page.client_storage.set("MRFarmer.punch_cards", True)
         self.page.client_storage.set("MRFarmer.more_activities", True)

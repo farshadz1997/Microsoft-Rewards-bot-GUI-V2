@@ -19,10 +19,14 @@ from func_timeout import FunctionTimedOut, func_set_timeout
 from random_word import RandomWords
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.common.exceptions import (ElementNotInteractableException,
                                         NoAlertPresentException,
                                         NoSuchElementException,
                                         SessionNotCreatedException,
+                                        WebDriverException,
                                         TimeoutException,
                                         UnexpectedAlertPresentException,
                                         InvalidSessionIdException,)
@@ -263,10 +267,65 @@ class Farmer:
         except ValueError:
             return ""
     
+    def is_proxy_working(proxy: str):
+        '''Check if proxy is working or not'''
+        try:
+            requests.get("https://www.google.com/", proxies={"https": proxy}, timeout=5)
+            return True
+        except:
+            return False
+    
+    @staticmethod
+    def account_browser(page: ft.Page, account: dict, accounts_page) -> WebDriver:
+        def create_browser():
+            if page.client_storage.get("MRFarmer.edge_webdriver"):
+                options = EdgeOptions()
+            else:
+                options = ChromeOptions()
+            accounts_path = Path(page.client_storage.get("MRFarmer.accounts_path"))
+            options.add_argument(f'--user-data-dir={accounts_path.parent}/Profiles/{account["username"]}/PC')
+            options.add_argument("user-agent=" + page.client_storage.get("MRFarmer.pc_user_agent"))
+            options.add_argument('lang=eb')
+            options.add_argument('--disable-blink-features=AutomationControlled')
+            prefs = {
+                "profile.default_content_setting_values.geolocation": 2,
+                "credentials_enable_service": False,
+                "profile.password_manager_enabled": False,
+                "webrtc.ip_handling_policy": "disable_non_proxied_udp",
+                "webrtc.multiple_routes_enabled": False,
+                "webrtc.nonproxied_udp_enabled" : False,
+                "detach": True
+            }
+            options.add_experimental_option("prefs", prefs)
+            options.add_experimental_option("useAutomationExtension", False)
+            options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            if page.client_storage.get("MRFarmer.headless"):
+                options.add_argument("--headless")
+            if page.client_storage.get("MRFarmer.use_proxy") and account.get("proxy", False):
+                options.add_argument(f'--proxy-server={account["proxy"]}')
+            options.add_argument('log-level=3')
+            options.add_argument("--start-maximized")
+            if page.client_storage.get("MRFarmer.edge_webdriver"):
+                browser_service = EdgeService()
+            else:
+                browser_service = ChromeService()
+            if platform.system() == 'Linux':
+                options.add_argument("--no-sandbox")
+                options.add_argument("--disable-dev-shm-usage")
+            if platform.system() == 'Windows':
+                browser_service.creationflags = subprocess.CREATE_NO_WINDOW
+            if page.client_storage.get("MRFarmer.edge_webdriver"):
+                browser = webdriver.Edge(options=options, service=browser_service)
+            else:
+                browser = webdriver.Chrome(options=options, service=browser_service)
+            return browser
+        browser = create_browser()
+        while page.session.get("MRFarmer.browser_running") and isinstance(browser, WebDriver):
+            time.sleep(2)
+            continue
+            
     def browser_setup(self, isMobile: bool = False, user_agent = PC_USER_AGENT):
         # Create Chrome browser
-        from selenium.webdriver.chrome.options import Options as ChromeOptions
-        from selenium.webdriver.edge.options import Options as EdgeOptions
         if self.page.client_storage.get("MRFarmer.edge_webdriver"):
             options = EdgeOptions()
         else:
@@ -290,16 +349,24 @@ class Farmer:
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         if self.page.client_storage.get("MRFarmer.headless"):
             options.add_argument("--headless")
+        if self.page.client_storage.get("MRFarmer.use_proxy") and self.current_account.get("proxy", False):
+            if self.is_proxy_working(self.current_account["proxy"]):
+                options.add_argument(f'--proxy-server={self.current_account["proxy"]}')
         options.add_argument('log-level=3')
         options.add_argument("--start-maximized")
-        chrome_service = ChromeService()
+        if self.page.client_storage.get("MRFarmer.edge_webdriver"):
+            browser_service = EdgeService()
+        else:
+            browser_service = ChromeService()
         if platform.system() == 'Linux':
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
         if platform.system() == 'Windows':
-            chrome_service.creationflags = subprocess.CREATE_NO_WINDOW
-        chrome_browser_obj = webdriver.Chrome(options=options, service=chrome_service)
-        self.browser = chrome_browser_obj
+            browser_service.creationflags = subprocess.CREATE_NO_WINDOW
+        if self.page.client_storage.get("MRFarmer.edge_webdriver"):
+            self.browser = webdriver.Edge(options=options, service=browser_service)
+        else:
+            self.browser = webdriver.Chrome(options=options, service=browser_service)
         return self.browser
     
     def login(self, email: str, pwd: str, isMobile: bool = False):

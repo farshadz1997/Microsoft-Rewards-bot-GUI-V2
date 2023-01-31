@@ -130,6 +130,13 @@ class Settings(ft.UserControl):
             tooltip="Use Microsoft Edge webdriver instead of Chrome webdriver",
             on_change=lambda e: self.switches_on_change(e, self.edge_switch)
         )
+        self.use_proxy = ft.Switch(
+            label="Use proxy",
+            value=False,
+            active_color=self.color_scheme,
+            tooltip="Use proxy in browser instance if you have set it in your account",
+            on_change=lambda e: self.switches_on_change(e, self.use_proxy)
+        )
         self.global_settings = ft.Card(
             content=ft.Container(
                 content=ft.Column(
@@ -145,7 +152,10 @@ class Settings(ft.UserControl):
                             ],
                             spacing=130
                         ),
-                        ft.Row([self.session_switch]),
+                        ft.Row(
+                            [self.session_switch, self.use_proxy],
+                            spacing=140,
+                        ),
                         ft.Row([self.fast_switch]),
                         ft.Row([self.save_errors_switch]),
                         ft.Row([self.shutdown_switch]),
@@ -242,6 +252,7 @@ class Settings(ft.UserControl):
         self.save_errors_switch.value = self.page.client_storage.get("MRFarmer.save_errors")
         self.shutdown_switch.value = self.page.client_storage.get("MRFarmer.shutdown")
         self.edge_switch.value = self.page.client_storage.get("MRFarmer.edge_webdriver")
+        self.edge_switch.value = self.page.client_storage.get("MRFarmer.use_proxy")
         # farmer settings
         self.daily_quests_switch.value = self.page.client_storage.get("MRFarmer.daily_quests")
         self.punch_cards_switch.value = self.page.client_storage.get("MRFarmer.punch_cards")
@@ -307,6 +318,8 @@ class Settings(ft.UserControl):
         self.session_switch.active_color = color_scheme
         self.save_errors_switch.active_color = color_scheme
         self.shutdown_switch.active_color = color_scheme
+        self.edge_switch.active_color = color_scheme
+        self.use_proxy.active_color = color_scheme
         # farmer settings
         self.daily_quests_switch.active_color = color_scheme
         self.punch_cards_switch.active_color = color_scheme
