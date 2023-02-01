@@ -285,7 +285,7 @@ class Farmer:
             accounts_path = Path(page.client_storage.get("MRFarmer.accounts_path"))
             options.add_argument(f'--user-data-dir={accounts_path.parent}/Profiles/{account["username"]}/PC')
             options.add_argument("user-agent=" + page.client_storage.get("MRFarmer.pc_user_agent"))
-            options.add_argument('lang=eb')
+            options.add_argument('lang=en')
             options.add_argument('--disable-blink-features=AutomationControlled')
             prefs = {
                 "profile.default_content_setting_values.geolocation": 2,
@@ -320,7 +320,7 @@ class Farmer:
                 browser = webdriver.Chrome(options=options, service=browser_service)
             return browser
         browser = create_browser()
-        while page.session.get("MRFarmer.browser_running") and isinstance(browser, WebDriver):
+        while accounts_page.is_browser_running_status() and isinstance(browser, WebDriver):
             time.sleep(2)
             continue
             
@@ -1410,11 +1410,11 @@ class Farmer:
                     
                     break
                     
-                except SessionNotCreatedException:
+                except (SessionNotCreatedException, WebDriverException):
                     self.browser = None
-                    self.home_page.update_section("Update your web driver")
-                    self.home_page.update_detail("web driver error")
-                    self.parent.display_error("Webdriver error", "Webdriver not found or outdated. Please update your webdriver.")
+                    self.home_page.update_section("Webdriver error")
+                    self.home_page.update_detail("Webdriver not found or outdated")
+                    self.parent.display_error("Webdriver error", "Webdriver not found or outdated. Please get or update your webdriver.")
                     self.home_page.finished()
                     return None
                 

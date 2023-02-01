@@ -13,6 +13,7 @@ class AccountsCardCreator(ft.UserControl):
         self.accounts = accounts
         self.page = page
         self.accounts_page: Type[Accounts] = accounts_page
+        self.is_browser_running: bool = False
         self.divided_accounts_lists = list(zip_longest(*[iter(self.accounts)]*2, fillvalue=None))
         self.number_of_rows = len(self.divided_accounts_lists)
         
@@ -543,7 +544,7 @@ class Accounts(ft.UserControl):
         if self.parent.is_farmer_running:
             self.parent.display_error("Can't open browser", "Stop farmer first then try to open browser")
             return
-        self.page.session.set("MRFarmer.browser_running", True)
+        self.is_browser_running = True
         self.page.dialog = self.browser_running_dialog
         self.browser_running_dialog.open = True
         self.page.update()
@@ -552,12 +553,16 @@ class Accounts(ft.UserControl):
         except (SessionNotCreatedException, WebDriverException):
             self.close_browser_dialog(None)
             time.sleep(1)
-            self.page.session.set("MRFarmer.browser_running", False)
+            self.is_browser_running = False
             self.parent.display_error("Webdriver error", "Webdriver not found or outdated. Please update your webdriver.")
             return
             
     def close_browser_dialog(self, e):
-        self.page.session.set("MRFarmer.browser_running", False)
+        self.is_browser_running = False
         self.browser_running_dialog.open = False
         self.page.update()
+        
+    def is_browser_running_status(self):
+        """This function constantly checkes by account browser in Farmer to know when to close browser"""
+        return self.is_browser_running
         

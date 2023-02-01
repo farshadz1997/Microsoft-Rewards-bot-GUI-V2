@@ -44,7 +44,7 @@ class Settings(ft.UserControl):
             text="Delete",
             icon=ft.icons.DELETE,
             icon_color=self.color_scheme,
-            tooltip="Delete saved user agents",
+            tooltip="Delete saved user agents and use defaults",
             on_click=self.delete_user_agents,
         )
         self.save_user_agents_button = ft.TextButton(

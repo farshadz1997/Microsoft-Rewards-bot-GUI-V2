@@ -1,6 +1,6 @@
 import flet as ft
 from pathlib import Path
-from src.app_layout import UserInterface
+from src.ui.app_layout import UserInterface
 import json
 
 
@@ -11,7 +11,7 @@ def main():
     else:
         with open(directory_path / "accounts.json", "w") as f:
             f.write(json.dumps([{"username": "Your Email", "password": "Your Password"}], indent=4))
-    ft.app(target=UserInterface)
+    ft.app(target=UserInterface, view=ft.AppViewer)
     
 
 if __name__ == "__main__":

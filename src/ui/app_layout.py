@@ -24,7 +24,9 @@ class UserInterface:
         if not self.page.client_storage.get("MRFarmer.has_run_before"):
             self.first_time_setup()
         self.page.theme_mode = self.page.client_storage.get("MRFarmer.theme_mode")
-        self.color_scheme = ft.colors.TEAL if self.page.theme_mode == "light" else ft.colors.INDIGO_300
+        self.light_theme_color = ft.colors.TEAL
+        self.dark_theme_color = ft.colors.INDIGO_300
+        self.color_scheme = self.light_theme_color if self.page.theme_mode == "light" else self.dark_theme_color
         self.page.theme = theme.Theme(color_scheme_seed=LIGHT_SEED_COLOR)
         self.page.dark_theme = theme.Theme(color_scheme_seed=DARK_SEED_COLOR)
         self.page.window_height = 820
@@ -73,7 +75,7 @@ class UserInterface:
                     text="Ok",
                     on_click=self.close_error)
             ],
-            actions_alignment="end"
+            actions_alignment="center"
         )
         
         self.snack_bar_message = ft.Text()
@@ -124,7 +126,7 @@ class UserInterface:
     def toggle_theme_mode(self, e):
         self.page.theme_mode = "dark" if self.page.theme_mode == "light" else "light"
         self.page.client_storage.set("MRFarmer.theme_mode", self.page.theme_mode)
-        self.color_scheme = ft.colors.TEAL if self.page.theme_mode == "light" else ft.colors.INDIGO_300
+        self.color_scheme = self.light_theme_color if self.page.theme_mode == "light" else self.dark_theme_color
         self.page.snack_bar.bgcolor = self.color_scheme
         self.toggle_theme_button.icon = (
             ft.icons.MODE_NIGHT if self.page.theme_mode == "light" else ft.icons.WB_SUNNY_ROUNDED
