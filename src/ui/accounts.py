@@ -14,6 +14,7 @@ class AccountsCardCreator(ft.UserControl):
         self.page = page
         self.accounts_page: Type[Accounts] = accounts_page
         self.is_browser_running: bool = False
+        self.accounts_path = Path(page.client_storage.get("MRFarmer.accounts_path"))
         self.divided_accounts_lists = list(zip_longest(*[iter(self.accounts)]*2, fillvalue=None))
         self.number_of_rows = len(self.divided_accounts_lists)
         
@@ -21,7 +22,7 @@ class AccountsCardCreator(ft.UserControl):
         list_of_cards = []
         column = ft.Column(expand=12)
         for accounts in self.divided_accounts_lists:
-            cards = [SingleAccountCardCreator(account, self.page, self.accounts_page).card for account in accounts if account is not None]
+            cards = [SingleAccountCardCreator(account, self.page, self.accounts_page, self.accounts_path).card for account in accounts if account is not None]
             list_of_cards.append(cards)
             
         for _list in list_of_cards:
@@ -35,10 +36,10 @@ class AccountsCardCreator(ft.UserControl):
 
 
 class SingleAccountCardCreator:
-    def __init__(self, account: dict, page: ft.Page, accounts_page):
+    def __init__(self, account: dict, page: ft.Page, accounts_page, accounts_path: Path):
         self.account = account
         self.page = page
-        self.accounts_path = accounts_page.accounts_path
+        self.accounts_path = accounts_path
         self.accounts_page: Type[Accounts] = accounts_page
         self.card_creator()
         
@@ -133,7 +134,7 @@ class Accounts(ft.UserControl):
         self.page = page
         self.parent: UserInterface = parent
         self.color_scheme = parent.color_scheme
-        self.accounts_path = Path(page.client_storage.get("MRFarmer.accounts_path"))
+        
         self.ui()
         self.set_initial_values()
         self.page.update()

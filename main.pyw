@@ -11,7 +11,7 @@ def main():
     else:
         with open(directory_path / "accounts.json", "w") as f:
             f.write(json.dumps([{"username": "Your Email", "password": "Your Password"}], indent=4))
-    ft.app(target=UserInterface, view=ft.AppViewer)
+    ft.app(target=UserInterface)
     
 
 if __name__ == "__main__":
