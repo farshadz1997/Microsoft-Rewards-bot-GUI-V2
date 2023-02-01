@@ -1,0 +1,13 @@
+flet==0.3.2
+certifi
+chardet
+idna
+requests
+selenium==4.4.3
+urllib3
+ipapi
+func_timeout
+random-word==1.0.7
+pyyaml
+notifiers
+python-slugify
