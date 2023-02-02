@@ -1410,18 +1410,6 @@ class Farmer:
                     
                     break
                     
-                except (SessionNotCreatedException, WebDriverException) as e:
-                    if isinstance(self.browser, WebDriver):
-                        self.browser.quit()
-                        self.browser = None
-                    else:
-                        self.browser = None
-                        self.home_page.update_section("Webdriver error")
-                        self.home_page.update_detail("Webdriver not found or outdated")
-                        self.parent.display_error("Webdriver error", "Webdriver not found or outdated. Please get or update your webdriver.")
-                        self.home_page.finished()
-                        return None
-                
                 except AccountLockedException:
                     self.browser.quit()
                     self.browser = None
@@ -1484,6 +1472,18 @@ class Farmer:
                     if internet:
                         pass
                     else:
+                        self.home_page.finished()
+                        return None
+                    
+                except (SessionNotCreatedException, WebDriverException) as e:
+                    if isinstance(self.browser, WebDriver):
+                        self.browser.quit()
+                        self.browser = None
+                    else:
+                        self.browser = None
+                        self.home_page.update_section("Webdriver error")
+                        self.home_page.update_detail("Webdriver not found or outdated")
+                        self.parent.display_error("Webdriver error", "Webdriver not found or outdated. Please get or update your webdriver.")
                         self.home_page.finished()
                         return None
                     
