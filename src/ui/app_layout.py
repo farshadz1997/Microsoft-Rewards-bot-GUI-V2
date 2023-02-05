@@ -166,6 +166,7 @@ class UserInterface:
         self.page.client_storage.set("MRFarmer.more_activities", True)
         self.page.client_storage.set("MRFarmer.pc_search", True)
         self.page.client_storage.set("MRFarmer.mobile_search", True)
+        self.page.client_storage.set("MRFarmer.msn_shopping_game", False)
         # telegram
         self.page.client_storage.set("MRFarmer.telegram_token", "")
         self.page.client_storage.set("MRFarmer.telegram_chat_id", "")

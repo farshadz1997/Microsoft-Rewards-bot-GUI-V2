@@ -11,6 +11,7 @@ from datetime import date, datetime, timedelta
 from notifiers import get_notifier
 import copy
 import flet as ft
+from typing import List, Union
 from .exceptions import *
 
 import ipapi
@@ -18,6 +19,7 @@ import requests
 from func_timeout import FunctionTimedOut, func_set_timeout
 from random_word import RandomWords
 from selenium import webdriver
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.edge.service import Service as EdgeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -29,7 +31,9 @@ from selenium.common.exceptions import (ElementNotInteractableException,
                                         WebDriverException,
                                         TimeoutException,
                                         UnexpectedAlertPresentException,
-                                        InvalidSessionIdException,)
+                                        InvalidSessionIdException,
+                                        JavascriptException,
+                                        ElementNotVisibleException)
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -183,6 +187,7 @@ class Farmer:
                 "Daily",
                 "Punch cards",
                 "More promotions",
+                "MSN shopping game",
                 "PC searches",
                 "Mobile searches"
             ]:
@@ -198,6 +203,7 @@ class Farmer:
                 account["log"]["Daily"] = False
                 account["log"]["Punch cards"] = False
                 account["log"]["More promotions"] = False
+                account["log"]["MSN shopping game"] = False
                 account["log"]["PC searches"] = False 
                 account["log"]["Mobile searches"] = False
         self.update_accounts()
@@ -217,6 +223,7 @@ class Farmer:
         self.accounts[self.account_index]["log"].pop("Daily", None)
         self.accounts[self.account_index]["log"].pop("Punch cards", None)
         self.accounts[self.account_index]["log"].pop("More promotions", None)
+        self.accounts[self.account_index]["log"].pop("MSN shopping game", None)
         self.accounts[self.account_index]["log"].pop("PC searches", None)
         self.accounts[self.account_index]["log"].pop("Mobile searches", None)
     
@@ -227,6 +234,8 @@ class Farmer:
         elif self.page.client_storage.get("MRFarmer.punch_cards") and account["log"]["Punch cards"] == False:
             return True
         elif self.page.client_storage.get("MRFarmer.more_activities") and account["log"]["More promotions"] == False:
+            return True
+        elif self.page.client_storage.get("MRFarmer.msn_shopping_game") and account["log"]["MSN shopping game"] == False:
             return True
         elif self.page.client_storage.get("MRFarmer.pc_search") and account["log"]["PC searches"] == False:
             return True
@@ -241,6 +250,8 @@ class Farmer:
         if self.page.client_storage.get("MRFarmer.punch_cards") and not account["log"]["Punch cards"]:
             conditions.append(True)
         if self.page.client_storage.get("MRFarmer.more_activities") and not account["log"]["More promotions"]:
+            conditions.append(True)
+        if self.page.client_storage.get("MRFarmer.msn_shopping_game") and not account["log"]["MSN shopping game"]:
             conditions.append(True)
         if self.page.client_storage.get("MRFarmer.pc_search") and not account["log"]["PC searches"]:
             conditions.append(True)
@@ -321,8 +332,11 @@ class Farmer:
             return browser
         browser = create_browser()
         while accounts_page.is_browser_running_status() and isinstance(browser, WebDriver):
-            time.sleep(2)
+            time.sleep(1)
             continue
+        else:
+            if isinstance(browser, WebDriver):
+                browser.quit()
             
     def browser_setup(self, isMobile: bool = False, user_agent = PC_USER_AGENT):
         # Create Chrome browser
@@ -375,15 +389,7 @@ class Farmer:
         self.home_page.update_section(login_message)
         # Close welcome tab for new sessions
         if self.page.client_storage.get("MRFarmer.session"):
-            time.sleep(2)
-            if len(self.browser.window_handles) > 1:
-                current_window = self.browser.current_window_handle
-                for handler in self.browser.window_handles:
-                    if handler != current_window:
-                        self.browser.switch_to.window(handler)
-                        time.sleep(0.5)
-                        self.browser.close()
-                self.browser.switch_to.window(current_window)
+            self.close_welcome_tab()
         # Access to bing.com
         self.browser.get('https://login.live.com/')
         # Check if account is already logged in
@@ -398,7 +404,7 @@ class Farmer:
                 time.sleep(5)
             if self.browser.title == 'Microsoft account | Home' or self.is_element_exists(By.ID, 'navs_container'):
                 self.home_page.update_detail("Microsoft Rewards...")
-                self.rewards_login()
+                self.rewards_login(isMobile)
                 self.home_page.update_detail("Bing...")
                 self.check_bing_login(isMobile)
                 return
@@ -412,7 +418,7 @@ class Farmer:
                     time.sleep(5)
                     self.home_page.update_section("Logged in")
                     self.home_page.update_detail("Microsoft Rewards...")
-                    self.rewards_login()
+                    self.rewards_login(isMobile)
                     self.home_page.update_detail("Bing...")
                     self.check_bing_login(isMobile)
                     return None
@@ -476,12 +482,12 @@ class Farmer:
             pass
         # Check Microsoft Rewards
         self.home_page.update_detail("Microsoft Rewards...")
-        self.rewards_login()
+        self.rewards_login(isMobile)
         # Check Login
         self.home_page.update_detail("Bing...")
         self.check_bing_login(isMobile)
 
-    def rewards_login(self):
+    def rewards_login(self, isMobile: bool = False):
         """Login into Microsoft rewards and check account"""
         self.browser.get(self.base_url)
         try:
@@ -498,8 +504,25 @@ class Farmer:
             elif self.browser.find_element(By.XPATH, '//*[@id="error"]/h1').get_attribute('innerHTML') == 'Microsoft Rewards is not available in this country or region.':
                 raise RegionException('Microsoft Rewards is not available in your region !')
         except NoSuchElementException:
-            pass
+            points = self.get_account_points()
+            self.home_page.update_points_counter(points)
+            if isMobile:
+                self.remainingSearchesM = self.get_remaining_searches()[1]
+                if not self.starting_points:
+                    self.starting_points = self.get_account_points()
 
+    def close_welcome_tab(self):
+        """close welcome tab if it exists"""
+        time.sleep(2)
+        if len(self.browser.window_handles) > 1:
+            current_window = self.browser.current_window_handle
+            for handler in self.browser.window_handles:
+                if handler != current_window:
+                    self.browser.switch_to.window(handler)
+                    time.sleep(0.5)
+                    self.browser.close()
+            self.browser.switch_to.window(current_window)
+    
     @func_set_timeout(300)
     def check_bing_login(self, isMobile: bool = False):
         self.browser.get('https://bing.com/')
@@ -524,6 +547,7 @@ class Farmer:
             except:
                 pass
             else:
+                self.home_page.update_points_counter(self.points_counter)
                 return None
         #Accept Cookies
         try:
@@ -602,6 +626,8 @@ class Farmer:
                 self.points_counter = int(self.browser.find_element(By.ID, 'fly_id_rc').get_attribute('innerHTML'))
         except:
             self.check_bing_login(isMobile)
+        else:
+            self.home_page.update_points_counter(self.points_counter)
             
     def wait_until_visible(self, by_: By, selector: str, time_to_wait: int = 10):
         WebDriverWait(self.browser, time_to_wait).until(ec.visibility_of_element_located((by_, selector)))
@@ -1247,8 +1273,132 @@ class Farmer:
                         self.complete_more_promotion_search(i)
             except:
                 self.reset_tabs()
+        self.home_page.update_section("-")
+        self.home_page.update_detail("-")
         self.accounts[self.account_index]["log"]['More promotions'] = True
         self.update_accounts()
+    
+    def complete_msn_shopping_game_quiz(self):
+
+        def expand_shadow_element(element, index: int = None) -> Union[List[WebElement], WebElement]:
+            """Returns childrens of shadow element"""
+            if index is not None:
+                shadow_root = WebDriverWait(self.browser, 45).until(
+                    ec.visibility_of(self.browser.execute_script('return arguments[0].shadowRoot.children', element)[index])
+                )
+            else:
+                # wait to visible one element then get the list
+                WebDriverWait(self.browser, 45).until(
+                    ec.visibility_of(self.browser.execute_script('return arguments[0].shadowRoot.children', element)[0])
+                )
+                shadow_root = self.browser.execute_script('return arguments[0].shadowRoot.children', element)
+            return shadow_root
+
+        def get_children(element) -> List[WebElement]:
+            children = self.browser.execute_script('return arguments[0].children', element)
+            return children
+        
+        def get_sign_in_state() -> WebElement:
+            """check wheather user is signed in or not and return the button to sign in"""
+            script_to_user_pref_container = 'document.getElementsByTagName("shopping-page-base")[0]\
+                .shadowRoot.children[0].children[1].children[0]\
+                .shadowRoot.children[0].shadowRoot.children[0]\
+                .getElementsByClassName("user-pref-container")[0]'
+            WebDriverWait(self.browser, 60).until(ec.visibility_of(
+                self.browser.execute_script(f'return {script_to_user_pref_container}')
+                )
+            )
+            button = WebDriverWait(self.browser, 60).until(ec.visibility_of(
+                    self.browser.execute_script(
+                        f'return {script_to_user_pref_container}.\
+                        children[0].children[0].shadowRoot.children[0].\
+                        getElementsByClassName("me-control")[0]'
+                    )
+                )
+            )
+            return button
+            
+        def sign_in():
+            self.home_page.update_detail("Signing in")
+            sign_in_button = get_sign_in_state()
+            sign_in_button.click()
+            time.sleep(5)
+            self.wait_until_visible(By.ID, 'newSessionLink', 10)
+            self.browser.find_element(By.ID, 'newSessionLink').click()
+            self.home_page.update_detail("Waiting for elements")
+            self.wait_until_visible(By.TAG_NAME, 'shopping-page-base', 60)
+            expand_shadow_element(self.browser.find_element(By.TAG_NAME, 'shopping-page-base'), 0)
+            self.home_page.update_detail("Checking signed in state")
+            get_sign_in_state()
+        
+        def get_gaming_card() -> WebElement:
+            shopping_page_base_childs = expand_shadow_element(self.browser.find_element(By.TAG_NAME, 'shopping-page-base'), 0)
+            shopping_homepage = shopping_page_base_childs.find_element(By.TAG_NAME, 'shopping-homepage')
+            msft_feed_layout = expand_shadow_element(shopping_homepage, 0).find_element(By.TAG_NAME, 'msft-feed-layout')
+            msn_shopping_game_pane = expand_shadow_element(msft_feed_layout)
+            for element in msn_shopping_game_pane:
+                if element.get_attribute("gamestate") == "active":
+                    return element
+        
+        def click_correct_answer():
+            options_container = expand_shadow_element(gaming_card, 1)
+            options_elements = get_children(get_children(options_container)[1])
+            # click on the correct answer in options_elements
+            correct_answer = options_elements[int(gaming_card.get_attribute("_correctAnswerIndex"))]
+            # hover to show the select button
+            correct_answer.click()
+            time.sleep(1)
+            # click 'select' button
+            select_button = correct_answer.find_element(By.CLASS_NAME, 'shopping-select-overlay-button')
+            WebDriverWait(self.browser, 5).until(ec.element_to_be_clickable(select_button))
+            select_button.click()
+        
+        def click_play_again():
+            time.sleep(random.randint(4, 6))
+            options_container = expand_shadow_element(gaming_card)[1]
+            get_children(options_container)[0].find_element(By.TAG_NAME, 'button').click()
+        
+        try:
+            tries = 0
+            while tries <= 4:
+                tries += 1
+                self.home_page.update_section(f"MSN shopping game - try ({tries})")
+                self.browser.get("https://www.msn.com/en-us/shopping")
+                self.home_page.update_detail("Waiting for elements")
+                self.wait_until_visible(By.TAG_NAME, 'shopping-page-base', 60)
+                time.sleep(15)
+                self.home_page.update_detail("Getting sign in state")
+                try:
+                    sign_in_button = get_sign_in_state()
+                except:
+                    if tries == 4:
+                        raise ElementNotVisibleException("Sign in button did not show up")
+                else:
+                    break
+            time.sleep(5)
+            if "Sign in" in sign_in_button.text:
+                sign_in()
+            self.home_page.update_detail("Locating gaming card")
+            gaming_card = get_gaming_card()
+            self.home_page.update_detail("Answering questions")
+            for _ in range(10):
+                try:
+                    click_correct_answer()
+                    click_play_again()
+                    time.sleep(random.randint(5, 7))
+                except (NoSuchElementException, JavascriptException):
+                    break
+        except:
+            self.home_page.update_detail("Failed to complete")
+            self.reset_tabs()
+        else:
+            self.home_page.update_detail("Completed")
+            self.browser.get(self.base_url)
+        finally:
+            self.accounts[self.account_index]["log"]["MSN shopping game"] = True
+            self.update_accounts()
+            self.home_page.update_section("-")
+            self.home_page.update_detail("-")
         
     def get_remaining_searches(self):
         dashboard = self.get_dashboard_data()
@@ -1305,6 +1455,11 @@ class Farmer:
         self.home_page.stop_button.disabled = state
         self.page.update()
     
+    def save_errors(self, error: str):
+        with open(f"{Path.cwd()}/errors.txt", "a") as f:
+            f.write(f"\n-------------------{datetime.now()}-------------------\r\n")
+            f.write(f"{error}\n")
+    
     def perform_run(self):
         """Check whether timer is set to run it at time else run immediately"""
         if self.page.client_storage.get("MRFarmer.timer_switch"):
@@ -1334,6 +1489,7 @@ class Farmer:
                         self.update_accounts()
                     self.home_page.update_current_account(account["username"])
                     self.home_page.update_overall_infos()
+                    redeem_goal_title = ""
                     if self.is_pc_need(account):
 
                         self.browser_setup(False, self.page.client_storage.get("MRFarmer.pc_user_agent"))
@@ -1359,6 +1515,10 @@ class Farmer:
                             self.complete_more_promotions()
                             self.home_page.update_points_counter(self.points_counter)
 
+                        if self.page.client_storage.get("MRFarmer.msn_shopping_game") and not account["log"]["MSN shopping game"]:
+                            self.complete_msn_shopping_game_quiz()
+                            self.home_page.update_points_counter(self.get_account_points())
+                        
                         if self.page.client_storage.get("MRFarmer.pc_search") and not account["log"]["PC searches"]:
                             remainingSearches = self.get_remaining_searches()[0]
                             self.bing_searches(remainingSearches)
@@ -1375,13 +1535,17 @@ class Farmer:
                         self.browser_setup(True, account.get('mobile_user_agent', self.page.client_storage.get("MRFarmer.mobile_user_agent")))
                         self.disable_stop_button(False)
                         self.login(account["username"], account["password"], True)
-                        self.browser.get(self.base_url)
-                        redeem_goal_title, redeem_goal_price = self.get_redeem_goal()
-                        if not self.starting_points:
-                            self.starting_points = self.get_account_points()
-                        remainingSearches = self.get_remaining_searches()[1]
-                        if remainingSearches > 0:
-                            self.bing_searches(remainingSearches, True)
+                        if (
+                            (
+                                self.page.client_storage.get("MRFarmer.send_to_telegram") or
+                                self.page.client_storage.get("MRFarmer.send_to_discord")
+                            ) and
+                            redeem_goal_title == ""
+                        ):
+                            self.browser.get(self.base_url)
+                            redeem_goal_title, redeem_goal_price = self.get_redeem_goal()
+                        if self.remainingSearchesM > 0:
+                            self.bing_searches(self.remainingSearchesM, True)
                         account["log"]["Mobile searches"] = True
                         self.update_accounts()
                         self.disable_stop_button(True)
@@ -1395,7 +1559,7 @@ class Farmer:
                     
                     if (
                         (self.page.client_storage.get("MRFarmer.send_to_telegram") or self.page.client_storage.get("MRFarmer.send_to_discord")) and
-                        redeem_goal_title != ""and
+                        redeem_goal_title != "" and
                         redeem_goal_price <= self.points_counter
                     ):
                         account["log"]["Redeem goal title"] = redeem_goal_title
@@ -1479,6 +1643,8 @@ class Farmer:
                     if isinstance(self.browser, WebDriver):
                         self.browser.quit()
                         self.browser = None
+                        if self.page.client_storage.get("MRFarmer.save_errors"):
+                            self.save_errors(str(e))
                     else:
                         self.browser = None
                         self.home_page.update_section("Webdriver error")
@@ -1493,9 +1659,7 @@ class Farmer:
                     self.starting_points = None
                     self.browser = None
                     if self.page.client_storage.get("MRFarmer.save_errors"):
-                        with open(f"{Path.cwd()}/errors.txt", "a") as f:
-                            f.write(f"\n-------------------{datetime.now()}-------------------\r\n")
-                            f.write(f"{str(e)}\n")
+                        self.save_errors(str(e))
                     internet = self.check_internet_connection()
                     if internet:
                         pass

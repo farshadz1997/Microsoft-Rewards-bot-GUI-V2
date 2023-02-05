@@ -198,6 +198,12 @@ class Settings(ft.UserControl):
             active_color=self.color_scheme,
             on_change=lambda e: self.switches_on_change(e, self.mobile_search_switch)
         )
+        self.msn_shopping_game_switch = ft.Switch(
+            label="MSN shopping game",
+            value=False,
+            active_color=self.color_scheme,
+            on_change=lambda e: self.switches_on_change(e, self.msn_shopping_game_switch)
+        )
         self.farmer_settings = ft.Card(
             content=ft.Container(
                 content=ft.Column(
@@ -206,7 +212,7 @@ class Settings(ft.UserControl):
                             title=ft.Text("Farmer settings"),
                             leading=ft.Icon(ft.icons.SETTINGS_APPLICATIONS),
                         ),
-                        ft.Row([self.daily_quests_switch]),
+                        ft.Row([self.daily_quests_switch, self.msn_shopping_game_switch], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                         ft.Row([self.punch_cards_switch]),
                         ft.Row([self.more_activities_switch]),
                         ft.Row([self.pc_search_switch]),
@@ -259,6 +265,7 @@ class Settings(ft.UserControl):
         self.more_activities_switch.value = self.page.client_storage.get("MRFarmer.more_activities")
         self.pc_search_switch.value = self.page.client_storage.get("MRFarmer.pc_search")
         self.mobile_search_switch.value = self.page.client_storage.get("MRFarmer.mobile_search")
+        self.msn_shopping_game_switch.value = self.page.client_storage.get("MRFarmer.msn_shopping_game")
         self.page.update()
     
     def clear_pc_user_agent_field(self, e):
@@ -326,6 +333,7 @@ class Settings(ft.UserControl):
         self.more_activities_switch.active_color = color_scheme
         self.pc_search_switch.active_color = color_scheme
         self.mobile_search_switch.active_color = color_scheme
+        self.msn_shopping_game_switch.active_color = color_scheme
     
     def get_all_flet_colors(self):
         self.flet_colors = {}

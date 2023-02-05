@@ -383,6 +383,7 @@ class Home(ft.UserControl):
             "Daily": False,
             "Punch cards": False,
             "More promotions": False,
+            "MSN shopping game": False,
             "PC searches": False,
             "Mobile searches": False
         }
@@ -453,6 +454,7 @@ class Home(ft.UserControl):
         
     def finished(self):
         self.parent.is_farmer_running = False
+        self.current_point.value = 0
         self.section.value =  "-"
         self.detail.value = "-"
         self.current_account_label.value = "Current account: None"
