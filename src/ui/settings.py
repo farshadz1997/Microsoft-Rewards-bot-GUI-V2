@@ -295,7 +295,8 @@ class Settings(ft.UserControl):
             self.punch_cards_switch,
             self.more_activities_switch,
             self.pc_search_switch,
-            self.mobile_search_switch
+            self.mobile_search_switch,
+            self.msn_shopping_game_switch
         ]
         if control in farmer_options and not control.value:
             count_of_true_controls = 0

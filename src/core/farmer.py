@@ -28,7 +28,6 @@ from selenium.common.exceptions import (ElementNotInteractableException,
                                         NoAlertPresentException,
                                         NoSuchElementException,
                                         SessionNotCreatedException,
-                                        WebDriverException,
                                         TimeoutException,
                                         UnexpectedAlertPresentException,
                                         InvalidSessionIdException,
@@ -1367,7 +1366,7 @@ class Farmer:
                 self.home_page.update_detail("Waiting for elements")
                 self.wait_until_visible(By.TAG_NAME, 'shopping-page-base', 60)
                 time.sleep(15)
-                self.home_page.update_detail("Getting sign in state")
+                self.home_page.update_detail("Waiting for sign in state")
                 try:
                     sign_in_button = get_sign_in_state()
                 except:
@@ -1639,19 +1638,13 @@ class Farmer:
                         self.home_page.finished()
                         return None
                     
-                except (SessionNotCreatedException, WebDriverException) as e:
-                    if isinstance(self.browser, WebDriver):
-                        self.browser.quit()
-                        self.browser = None
-                        if self.page.client_storage.get("MRFarmer.save_errors"):
-                            self.save_errors(str(e))
-                    else:
-                        self.browser = None
-                        self.home_page.update_section("Webdriver error")
-                        self.home_page.update_detail("Webdriver not found or outdated")
-                        self.parent.display_error("Webdriver error", "Webdriver not found or outdated. Please get or update your webdriver.")
-                        self.home_page.finished()
-                        return None
+                except SessionNotCreatedException:
+                    self.browser = None
+                    self.home_page.update_section("Webdriver error")
+                    self.home_page.update_detail("Webdriver not found or outdated")
+                    self.parent.display_error("Webdriver error", "Webdriver not found or outdated. Please get or update your webdriver.")
+                    self.home_page.finished()
+                    return None
                     
                 except (Exception, FunctionTimedOut) as e:
                     if isinstance(self.browser, WebDriver):
@@ -1673,6 +1666,6 @@ class Farmer:
                 self.send_report_to_messenger(message)
             self.update_accounts()
             if self.page.client_storage.get("MRFarmer.shutdown"):
-                os.system("shutdown /s")
+                os.system("shutdown /s /t 10")
             self.home_page.finished()
         
