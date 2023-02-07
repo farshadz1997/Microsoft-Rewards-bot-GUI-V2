@@ -57,6 +57,17 @@ class SingleAccountCardCreator:
             ),
             ft.PopupMenuItem(),
             ft.PopupMenuItem(
+                text="Clear log",
+                icon=ft.icons.RESTART_ALT,
+                on_click=lambda _: self.accounts_page.clear_account_log(self.account["username"])
+            ),
+            ft.PopupMenuItem(
+                text="Set to finished",
+                icon=ft.icons.DONE,
+                on_click=lambda _: self.accounts_page.set_account_to_finished(self.account["username"])
+            ),
+            ft.PopupMenuItem(),
+            ft.PopupMenuItem(
                 text="Edit account",
                 icon=ft.icons.EDIT_ATTRIBUTES,
                 on_click=lambda e: self.accounts_page.set_value_to_fields(e, self.account)
@@ -539,6 +550,44 @@ class Accounts(ft.UserControl):
             self.sync_accounts()
             self.parent.update_accounts_file()
             self.close_account_dialog(None)
+    
+    def clear_account_log(self, account: str):
+        if self.parent.is_farmer_running:
+            self.parent.display_error("Farmer is running", "You can't clear log when farmer is running")
+            return
+        accounts = self.page.session.get("MRFarmer.accounts")
+        for index, acc in enumerate(accounts):
+            if acc["username"] == account:
+                acc["log"]["Last check"] = "Not farmed yet"
+                acc["log"].pop("Daily", None)
+                acc["log"].pop("Punch cards", None)
+                acc["log"].pop("More promotions", None)
+                acc["log"].pop("MSN shopping game", None)
+                acc["log"].pop("PC searches", None)
+                acc["log"].pop("Mobile searches", None)
+                break
+        self.page.session.set("MRFarmer.accounts", accounts)
+        self.sync_accounts()
+        self.parent.update_accounts_file()
+        
+    def set_account_to_finished(self, account: str):
+        if self.parent.is_farmer_running:
+            self.parent.display_error("Farmer is running", "You can't set account to finished when farmer is running")
+            return
+        accounts = self.page.session.get("MRFarmer.accounts")
+        for index, acc in enumerate(accounts):
+            if acc["username"] == account:
+                acc["log"]["Last check"] = str(date.today())
+                acc["log"].pop("Daily", None)
+                acc["log"].pop("Punch cards", None)
+                acc["log"].pop("More promotions", None)
+                acc["log"].pop("MSN shopping game", None)
+                acc["log"].pop("PC searches", None)
+                acc["log"].pop("Mobile searches", None)
+                break
+        self.page.session.set("MRFarmer.accounts", accounts)
+        self.sync_accounts()
+        self.parent.update_accounts_file()
     
     def open_session_browser(self, account: dict):
         """Open session browser and dialog for account"""
