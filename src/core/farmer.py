@@ -32,7 +32,8 @@ from selenium.common.exceptions import (ElementNotInteractableException,
                                         UnexpectedAlertPresentException,
                                         InvalidSessionIdException,
                                         JavascriptException,
-                                        ElementNotVisibleException)
+                                        ElementNotVisibleException,
+                                        WebDriverException)
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -1477,7 +1478,7 @@ class Farmer:
     
     def run(self):
         for account in self.accounts:
-            while True:
+            while self.parent.get_farming_status():
                 try:
                     self.current_account = account
                     self.account_index = self.accounts.index(account)
@@ -1659,7 +1660,8 @@ class Farmer:
                     else:
                         self.home_page.finished()
                         return None
-                    
+            else:
+                return       
         else:
             if self.page.client_storage.get("MRFarmer.send_to_telegram") or self.page.client_storage.get("MRFarmer.send_to_discord"):
                 message = self.create_message()

@@ -414,7 +414,7 @@ class Home(ft.UserControl):
         self.page.update()
     
     def update_current_account(self, account: str):
-        self.current_account_label.value = account
+        self.current_account_label.value = account.capitalize()
         self.page.update()
       
     def update_overall_infos(self):

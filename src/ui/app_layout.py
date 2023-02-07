@@ -9,6 +9,7 @@ from ..core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
 from .responsive_menu_layout import ResponsiveMenuLayout
 from pathlib import Path
 import json
+from datetime import datetime
 
 
 LIGHT_SEED_COLOR = ft.colors.TEAL
@@ -35,6 +36,7 @@ class UserInterface:
         self.page.window_maximizable = False
         self.page.window_center()
         self.page.on_route_change = self.on_route_change
+        self.page.on_error = self.save_crash_error
         self.is_farmer_running: bool = False
         self.ui()
         self.page.update()
@@ -201,4 +203,12 @@ class UserInterface:
     def update_accounts_file(self):
         with open(self.page.client_storage.get("MRFarmer.accounts_path"), "w") as file:
             file.write(json.dumps(self.page.session.get("MRFarmer.accounts"), indent = 4))
-        
+    
+    def save_crash_error(self, e):
+        with open(f"{Path.cwd()}/errors.txt", "a") as f:
+            f.write(f"\n-------------------{datetime.now()}-------------------\r\n")
+            f.write(f"{e.data}\n")
+            
+    def get_farming_status(self):
+        """checks by farmer to know stop or continue farming"""
+        return self.is_farmer_running

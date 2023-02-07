@@ -85,7 +85,7 @@ class SingleAccountCardCreator:
                     expand=3,
                     controls=[
                         ft.ListTile(
-                            title=ft.Text(self.account["username"], size=14),
+                            title=ft.Text(self.account["username"].capitalize(), size=14),
                             leading=self.get_icon(),
                             subtitle=ft.Text(self.account["log"]["Last check"]),
                             trailing=ft.PopupMenuButton(
