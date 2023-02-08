@@ -57,7 +57,7 @@ class SingleAccountCardCreator:
             ),
             ft.PopupMenuItem(),
             ft.PopupMenuItem(
-                text="Clear log",
+                text="Reset log",
                 icon=ft.icons.RESTART_ALT,
                 on_click=lambda _: self.accounts_page.clear_account_log(self.account["username"])
             ),
@@ -69,7 +69,7 @@ class SingleAccountCardCreator:
             ft.PopupMenuItem(),
             ft.PopupMenuItem(
                 text="Edit account",
-                icon=ft.icons.EDIT_ATTRIBUTES,
+                icon=ft.icons.EDIT,
                 on_click=lambda e: self.accounts_page.set_value_to_fields(e, self.account)
             ),
             ft.PopupMenuItem(

@@ -1332,6 +1332,7 @@ class Farmer:
             expand_shadow_element(self.browser.find_element(By.TAG_NAME, 'shopping-page-base'), 0)
             self.home_page.update_detail("Checking signed in state")
             get_sign_in_state()
+            time.sleep(5 if self.page.client_storage.get("MRFarmer.fast") else 10)
         
         def get_gaming_card() -> WebElement:
             shopping_page_base_childs = expand_shadow_element(self.browser.find_element(By.TAG_NAME, 'shopping-page-base'), 0)
@@ -1347,7 +1348,7 @@ class Farmer:
             options_elements = get_children(get_children(options_container)[1])
             # click on the correct answer in options_elements
             correct_answer = options_elements[int(gaming_card.get_attribute("_correctAnswerIndex"))]
-            # hover to show the select button
+            # click to show the select button
             correct_answer.click()
             time.sleep(1)
             # click 'select' button
@@ -1401,6 +1402,7 @@ class Farmer:
             self.update_accounts()
             self.home_page.update_section("-")
             self.home_page.update_detail("-")
+            time.sleep(5 if self.page.client_storage.get("MRFarmer.fast") else 10)
         
     def get_remaining_searches(self):
         dashboard = self.get_dashboard_data()

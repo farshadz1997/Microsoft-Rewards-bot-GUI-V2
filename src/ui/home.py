@@ -447,6 +447,7 @@ class Home(ft.UserControl):
         self.stop_button.disabled = True
         self.stop_progress_ring.visible = True
         self.stop_icon.visible = False
+        self.parent.is_farmer_running = False
         self.page.update()
         if isinstance(self.farmer.browser, WebDriver):
             self.farmer.browser.quit()
