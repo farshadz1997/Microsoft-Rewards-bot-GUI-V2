@@ -62,7 +62,7 @@ class SingleAccountCardCreator:
                 on_click=lambda _: self.accounts_page.clear_account_log(self.account["username"])
             ),
             ft.PopupMenuItem(
-                text="Set to finished",
+                text="Set as finished",
                 icon=ft.icons.DONE,
                 on_click=lambda _: self.accounts_page.set_account_to_finished(self.account["username"])
             ),

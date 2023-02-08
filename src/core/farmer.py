@@ -411,6 +411,8 @@ class Farmer:
             elif self.browser.title == 'Your account has been temporarily suspended':
                 raise AccountLockedException('Your account has been locked !')
             elif self.is_element_exists(By.ID, 'mectrl_headerPicture') or 'Sign In or Create' in self.browser.title:
+                self.browser.find_element(By.ID, 'mectrl_headerPicture').click()
+                self.wait_until_visible(By.ID, 'i0118', 10)
                 if self.is_element_exists(By.ID, 'i0118'):
                     self.browser.find_element(By.ID, "i0118").send_keys(pwd)
                     time.sleep(2)
