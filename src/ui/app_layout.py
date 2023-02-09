@@ -207,6 +207,7 @@ class UserInterface:
     def save_crash_error(self, e):
         with open(f"{Path.cwd()}/errors.txt", "a") as f:
             f.write(f"\n-------------------{datetime.now()}-------------------\r\n")
+            f.write("APP_ERROR:\n")
             f.write(f"{e.data}\n")
             
     def get_farming_status(self):

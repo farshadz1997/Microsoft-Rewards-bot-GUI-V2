@@ -737,6 +737,8 @@ class Farmer:
             self.browser.get(self.base_url)
         except:
             self.browser.get(self.base_url)
+        finally:
+            self.wait_until_visible(By.ID, 'app-host', 30)
             
     def get_answer_code(self, key: str, string: str) -> str:
         """Get answer code for this or that quiz"""
@@ -1402,7 +1404,7 @@ class Farmer:
             self.update_accounts()
             self.home_page.update_section("-")
             self.home_page.update_detail("-")
-            time.sleep(5 if self.page.client_storage.get("MRFarmer.fast") else 10)
+            self.wait_until_visible(By.ID, 'app-host', 30)
         
     def get_remaining_searches(self):
         dashboard = self.get_dashboard_data()
@@ -1502,6 +1504,7 @@ class Farmer:
                         self.home_page.update_detail("Logged in")
                         
                         self.browser.get(self.base_url)
+                        self.wait_until_visible(By.ID, 'app-host', 30)
                         self.starting_points = self.get_account_points()
                         redeem_goal_title, redeem_goal_price = self.get_redeem_goal()
                         self.points_counter = self.starting_points
@@ -1547,6 +1550,7 @@ class Farmer:
                             redeem_goal_title == ""
                         ):
                             self.browser.get(self.base_url)
+                            self.wait_until_visible(By.ID, 'app-host', 30)
                             redeem_goal_title, redeem_goal_price = self.get_redeem_goal()
                         if self.remainingSearchesM > 0:
                             self.bing_searches(self.remainingSearchesM, True)
