@@ -553,7 +553,7 @@ class Accounts(ft.UserControl):
     
     def clear_account_log(self, account: str):
         if self.parent.is_farmer_running:
-            self.parent.display_error("Farmer is running", "You can't clear log when farmer is running")
+            self.parent.display_error("Farmer is running", "You can't reset log when farmer is running")
             return
         accounts = self.page.session.get("MRFarmer.accounts")
         for index, acc in enumerate(accounts):

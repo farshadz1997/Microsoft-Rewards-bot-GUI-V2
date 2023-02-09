@@ -1113,16 +1113,6 @@ class Farmer:
             try:
                 if punchCard['parentPromotion'] != None and punchCard['childPromotions'] != None and punchCard['parentPromotion']['complete'] == False and punchCard['parentPromotion']['pointProgressMax'] != 0:
                     url = punchCard['parentPromotion']['attributes']['destination']
-                    if self.browser.current_url.startswith('https://rewards.'):
-                        path = url.replace('https://rewards.microsoft.com', '')
-                        new_url = 'https://rewards.microsoft.com/dashboard/'
-                        userCode = path[11:15]
-                        dest = new_url + userCode + path.split(userCode)[1]
-                    else:
-                        path = url.replace('https://account.microsoft.com/rewards/dashboard/','')
-                        new_url = 'https://account.microsoft.com/rewards/dashboard/'
-                        userCode = path[:4]
-                        dest = new_url + userCode + path.split(userCode)[1]
                     self.complete_punch_card(url, punchCard['childPromotions'])
             except:
                 self.reset_tabs()
