@@ -445,6 +445,7 @@ class Accounts(ft.UserControl):
                     "Daily": False,
                     "Punch cards": False,
                     "More promotions": False,
+                    "MSN shopping game": False,
                     "PC searches": False,
                     "Mobile searches": False
                 }
