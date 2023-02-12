@@ -17,6 +17,7 @@ class Settings(ft.UserControl):
         self.pc_user_agent_field = ft.TextField(
             label="PC User Agent",
             multiline=False,
+            text_size=14,
             icon=ft.icons.COMPUTER,
             border_color=self.color_scheme,
             error_style=ft.TextStyle(color="red"),
@@ -25,12 +26,14 @@ class Settings(ft.UserControl):
             on_change=lambda _: self.user_agents_on_change(self.pc_user_agent_field),
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
+                icon_size=14,
                 on_click=lambda _: self.clear_field(self.pc_user_agent_field)
             )        
         )
         self.mobile_user_agent_field = ft.TextField(
             label="Mobile User Agent",
             multiline=False,
+            text_size=14,
             icon=ft.icons.PHONE_ANDROID,
             border_color=self.color_scheme,
             error_style=ft.TextStyle(color="red"),
@@ -39,6 +42,7 @@ class Settings(ft.UserControl):
             on_change=lambda _: self.user_agents_on_change(self.mobile_user_agent_field),
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
+                icon_size=14,
                 on_click=lambda _: self.clear_field(self.mobile_user_agent_field)
             )        
         )
@@ -139,6 +143,13 @@ class Settings(ft.UserControl):
             tooltip="Use proxy in browser instance if you have set it in your account",
             on_change=lambda e: self.switches_on_change(e, self.use_proxy)
         )
+        self.auto_start_switch = ft.Switch(
+            label="Auto start",
+            value=False,
+            active_color=self.color_scheme,
+            tooltip="Start farming automatically when you start the program",
+            on_change=lambda e: self.switches_on_change(e, self.auto_start_switch)
+        )
         self.global_settings = ft.Card(
             content=ft.Container(
                 content=ft.Column(
@@ -158,7 +169,13 @@ class Settings(ft.UserControl):
                             [self.session_switch, self.use_proxy],
                             spacing=140,
                         ),
-                        ft.Row([self.fast_switch]),
+                        ft.Row(
+                            controls=[
+                                self.fast_switch,
+                                self.auto_start_switch
+                            ],
+                            spacing=162,
+                        ),
                         ft.Row([self.save_errors_switch]),
                         ft.Row([self.shutdown_switch]),
                     ],
@@ -227,8 +244,6 @@ class Settings(ft.UserControl):
             expand=3,
         )
         
-        # Change Theme
-        
     def build(self):
         return ft.Container(
             margin=ft.margin.all(25),
@@ -260,6 +275,7 @@ class Settings(ft.UserControl):
         self.shutdown_switch.value = self.page.client_storage.get("MRFarmer.shutdown")
         self.edge_switch.value = self.page.client_storage.get("MRFarmer.edge_webdriver")
         self.edge_switch.value = self.page.client_storage.get("MRFarmer.use_proxy")
+        self.auto_start_switch.value = self.page.client_storage.get("MRFarmer.auto_start")
         # farmer settings
         self.daily_quests_switch.value = self.page.client_storage.get("MRFarmer.daily_quests")
         self.punch_cards_switch.value = self.page.client_storage.get("MRFarmer.punch_cards")
@@ -331,6 +347,8 @@ class Settings(ft.UserControl):
                 return
         name = control.label.lower().replace(" ", "_")
         self.page.client_storage.set(f"MRFarmer.{name}", control.value)
+        if control == self.auto_start_switch and control.value:
+            self.parent.display_error("Auto start", "Auto start will be enabled after the next start of the app.")
         
     def toggle_theme_mode(self, color_scheme):
         self.color_scheme = color_scheme
@@ -347,6 +365,7 @@ class Settings(ft.UserControl):
         self.shutdown_switch.active_color = color_scheme
         self.edge_switch.active_color = color_scheme
         self.use_proxy.active_color = color_scheme
+        self.auto_start_switch.active_color = color_scheme
         # farmer settings
         self.daily_quests_switch.active_color = color_scheme
         self.punch_cards_switch.active_color = color_scheme

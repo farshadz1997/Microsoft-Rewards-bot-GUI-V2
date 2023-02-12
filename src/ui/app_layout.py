@@ -40,7 +40,7 @@ class UserInterface:
         self.is_farmer_running: bool = False
         self.ui()
         self.page.update()
-        
+        self.auto_start_if_needed()
         
     def ui(self):
         menu_button = ft.IconButton(ft.icons.MENU)
@@ -162,6 +162,7 @@ class UserInterface:
         self.page.client_storage.set("MRFarmer.shutdown", False)
         self.page.client_storage.set("MRFarmer.edge_webdriver", False)
         self.page.client_storage.set("MRFarmer.use_proxy", False)
+        self.page.client_storage.set("MRFarmer.auto_start", False)
         ## farmer settings
         self.page.client_storage.set("MRFarmer.daily_quests", True)
         self.page.client_storage.set("MRFarmer.punch_cards", True)
@@ -213,3 +214,11 @@ class UserInterface:
     def get_farming_status(self):
         """checks by farmer to know stop or continue farming"""
         return self.is_farmer_running
+    
+    def auto_start_if_needed(self):
+        """Start to Farm if auto start is enabled at startup"""
+        if self.page.session.contains_key("MRFarmer.accounts") and self.page.client_storage.get("MRFarmer.auto_start"):
+            self.home_page.start(None)
+        elif not self.page.session.contains_key("MRFarmer.accounts") and self.page.client_storage.get("MRFarmer.auto_start"):
+            self.display_error("Auto start failed", "Could not start auto farming because there is no accounts")
+            self.page.update()
