@@ -19,12 +19,13 @@ class Settings(ft.UserControl):
             multiline=False,
             icon=ft.icons.COMPUTER,
             border_color=self.color_scheme,
-            height=60,
-            expand=6,
-            text_size=14,
+            error_style=ft.TextStyle(color="red"),
+            dense=True,
+            expand=True,
+            on_change=lambda _: self.user_agents_on_change(self.pc_user_agent_field),
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
-                on_click=self.clear_pc_user_agent_field
+                on_click=lambda _: self.clear_field(self.pc_user_agent_field)
             )        
         )
         self.mobile_user_agent_field = ft.TextField(
@@ -32,20 +33,21 @@ class Settings(ft.UserControl):
             multiline=False,
             icon=ft.icons.PHONE_ANDROID,
             border_color=self.color_scheme,
-            height=60,
-            expand=6,
-            text_size=14,
+            error_style=ft.TextStyle(color="red"),
+            dense=True,
+            expand=True,
+            on_change=lambda _: self.user_agents_on_change(self.mobile_user_agent_field),
             suffix=ft.IconButton(
                 icon=ft.icons.CLEAR,
-                on_click=self.clear_mobile_user_agent_field
+                on_click=lambda _: self.clear_field(self.mobile_user_agent_field)
             )        
         )
         self.delete_user_agents_button = ft.TextButton(
-            text="Delete",
-            icon=ft.icons.DELETE,
+            text="Reset to defaults",
+            icon=ft.icons.RESTART_ALT,
             icon_color=self.color_scheme,
             tooltip="Delete saved user agents and use defaults",
-            on_click=self.delete_user_agents,
+            on_click=self.reset_to_default_user_agents,
         )
         self.save_user_agents_button = ft.TextButton(
             text="Save",
@@ -227,7 +229,6 @@ class Settings(ft.UserControl):
         
         # Change Theme
         
-    
     def build(self):
         return ft.Container(
             margin=ft.margin.all(25),
@@ -268,25 +269,43 @@ class Settings(ft.UserControl):
         self.msn_shopping_game_switch.value = self.page.client_storage.get("MRFarmer.msn_shopping_game")
         self.page.update()
     
-    def clear_pc_user_agent_field(self, e):
-        self.pc_user_agent_field.value = None
-        self.page.update()
-    
-    def clear_mobile_user_agent_field(self, e):
-        self.mobile_user_agent_field.value = None
+    def clear_field(self, control: ft.TextField):
+        control.value = None
+        control.error_text = "This field is required"
         self.page.update()
 
     def save_user_agents(self, e):
-        if self.pc_user_agent_field.value != "":
-            self.page.client_storage.set("MRFarmer.pc_user_agent", self.pc_user_agent_field.value)
-        if self.mobile_user_agent_field.value != "":    
-            self.page.client_storage.set("MRFarmer.mobile_user_agent", self.mobile_user_agent_field.value)
+        user_agents_fields = [self.pc_user_agent_field, self.mobile_user_agent_field]
+        error = False
+        for field in user_agents_fields:
+            if field.value == "":
+                field.error_text = "This field is required"
+                error = True
+        if error:
+            self.parent.open_snack_bar("Please fill in all fields.")
+            self.page.update()
+            return
+        self.page.client_storage.set("MRFarmer.pc_user_agent", self.pc_user_agent_field.value)
+        self.page.client_storage.set("MRFarmer.mobile_user_agent", self.mobile_user_agent_field.value)
+        self.parent.open_snack_bar("User agents have been saved.")
+    
+    def user_agents_on_change(self, control: ft.TextField):
+        if control.value == "":
+            control.error_text = "This field is required"
+        else:
+            control.error_text = None
+        self.page.update()
             
-    def delete_user_agents(self, e):
+    def reset_to_default_user_agents(self, e):
+        user_agents_fields = [self.pc_user_agent_field, self.mobile_user_agent_field]
+        for field in user_agents_fields:
+            if field.error_text:
+                field.error_text = None
         self.page.client_storage.set("MRFarmer.pc_user_agent", PC_USER_AGENT)
         self.pc_user_agent_field.value = PC_USER_AGENT
         self.page.client_storage.set("MRFarmer.mobile_user_agent", MOBILE_USER_AGENT)
         self.mobile_user_agent_field.value = MOBILE_USER_AGENT
+        self.parent.open_snack_bar("User agents have been reset to default.")
         self.page.update()
     
     def switches_on_change(self, e, control: ft.Switch):
@@ -336,16 +355,3 @@ class Settings(ft.UserControl):
         self.mobile_search_switch.active_color = color_scheme
         self.msn_shopping_game_switch.active_color = color_scheme
     
-    def get_all_flet_colors(self):
-        self.flet_colors = {}
-    
-    def color_option_creator(self, color: str):
-        return ft.Container(
-            bgcolor=color,
-            border_radius=ft.border_radius.all(50),
-            height=10,
-            width=10,
-            padding=ft.padding.all(5),
-            alignment=ft.alignment.center,
-            data=color
-        )
