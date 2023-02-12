@@ -5,17 +5,25 @@ Advance Microsoft (Bing) Rewards bot with Selenium and GUI by Flet framework (Fl
   <img src="https://user-images.githubusercontent.com/60227955/218319443-3f5ea317-e759-4e4c-a847-926b240e2806.png" alt="Main tab">
 </p>
 
-Other versions:
+You can use the other versions if you have problem with this one:
   - [Terminal version](https://github.com/farshadz1997/Microsoft-Rewards-bot)
   - [PyQt5 version](https://github.com/farshadz1997/Microsoft-Rewards-bot-GUI)
 
 ## Installations
-With this app you can easily farm Microsoft Rewards on multiple accounts. All you need to do is run the following command to install the packages:
-
-```pip install -r requirements.txt```
-
-
-then run ```main.pyw```.
+Follow these steps to run the app:
+  - Install required packages:
+    + <pre> pip install -r requirements.txt</pre>
+    + Linux users also read this: https://flet.dev/docs/guides/python/getting-started#linux
+  - Install Webdriver:
+    * Windows:
+      + Download [Chrome Webdriver](https://chromedriver.chromium.org/downloads) or
+      [Edge Webdriver](https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/) same your browser version:
+      + Save Webdriver in ```C:\Windows``` or Farmer directory
+    * Linux:
+      + <pre>apt install chromium-chromedriver</pre>
+      + If you have brew: <pre>brew cask install chromedriver</pre>
+  - Run ```main.pyw```.
+  
 
 ## Features
 I added all features from two last version plus some new features:
@@ -32,6 +40,4 @@ I added all features from two last version plus some new features:
   - Timer to run the Bot at your choosen time
   - You can use Edge webdriver instead of Chrome
   - Send daily report to your Discord server and your Telegram
-  
-  
   
