@@ -2,6 +2,85 @@ import flet as ft
 from ..core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
 
 
+class ThemeChanger(ft.UserControl):
+    def __init__(self, parent, page: ft.Page):
+        from .app_layout import UserInterface
+        super().__init__()
+        self.parent: UserInterface = parent
+        self.page = page
+        self.color_scheme = parent.color_scheme
+        self.ui()
+        self.page.update()
+        # self.set_initial_values()
+    
+    def color_option_creator(self, color: str):
+        return ft.Container(
+            bgcolor=color,
+            border_radius=ft.border_radius.all(50),
+            height=10,
+            width=10,
+            padding=ft.padding.all(5),
+            alignment=ft.alignment.center,
+            data=color
+        )
+    
+    def ui(self):
+        option_dict = {
+            ft.colors.LIGHT_GREEN: self.color_option_creator(ft.colors.LIGHT_GREEN),
+            ft.colors.RED_200: self.color_option_creator(ft.colors.RED_200),
+            ft.colors.AMBER_500: self.color_option_creator(ft.colors.AMBER_500),
+            ft.colors.PINK_300: self.color_option_creator(ft.colors.PINK_300),
+            ft.colors.ORANGE_300: self.color_option_creator(ft.colors.ORANGE_300),
+            ft.colors.LIGHT_BLUE: self.color_option_creator(ft.colors.LIGHT_BLUE),
+            ft.colors.DEEP_ORANGE_300: self.color_option_creator(ft.colors.DEEP_ORANGE_300),
+            ft.colors.PURPLE_100: self.color_option_creator(ft.colors.PURPLE_100),
+            ft.colors.RED_700: self.color_option_creator(ft.colors.RED_700),
+            ft.colors.TEAL_500: self.color_option_creator(ft.colors.TEAL_500),
+            ft.colors.YELLOW_400: self.color_option_creator(ft.colors.YELLOW_400),
+            ft.colors.PURPLE_400: self.color_option_creator(ft.colors.PURPLE_400),
+            ft.colors.BROWN_300: self.color_option_creator(ft.colors.BROWN_300),
+            ft.colors.CYAN_500: self.color_option_creator(ft.colors.CYAN_500),
+            ft.colors.BLUE_GREY_500: self.color_option_creator(ft.colors.BLUE_GREY_500),
+        }
+        
+        self.theme_color_grid = ft.GridView(
+            expand=5,
+            runs_count=6,
+        )
+        for color in option_dict.values():
+            color.on_click = self.set_theme_color
+            self.theme_color_grid.controls.append(color)
+            
+        self.widget_color_grid = ft.GridView(
+            expand=5,
+            runs_count=6
+        )
+        for color in option_dict.values():
+            color.on_click = self.set_widget_color
+            self.widget_color_grid.controls.append(color)
+            
+        
+    def build(self):
+        return self.theme_changer
+        
+    def change_theme(self, theme: str):
+        self.parent.toggle_theme_mode(theme)
+    
+    def set_theme_color(self, e):
+        pass
+    
+    def set_widget_color(self, e):
+        pass
+        
+    def set_initial_values(self):
+        if self.parent.theme == "light":
+            self.light_theme_button.disabled = True
+            self.dark_theme_button.disabled = False
+        else:
+            self.light_theme_button.disabled = False
+            self.dark_theme_button.disabled = True
+
+
 class Settings(ft.UserControl):
     def __init__(self, parent, page: ft.Page):
         from .app_layout import UserInterface
@@ -244,6 +323,8 @@ class Settings(ft.UserControl):
             expand=3,
         )
         
+        self.theme_changer = ThemeChanger(self.parent, self.page)
+        
     def build(self):
         return ft.Container(
             margin=ft.margin.all(25),
@@ -258,7 +339,37 @@ class Settings(ft.UserControl):
                             self.farmer_settings
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
-                    )
+                    ),
+                    ft.Row(
+                        controls=[
+                            ft.Card(
+                                expand=True,
+                                content=ft.Container(
+                                    margin=ft.margin.all(15),
+                                    content=ft.Column(
+                                        controls=[
+                                            ft.Row(
+                                                controls=[
+                                                    ft.Text("Theme color", text_align="center", expand=5, size=24, weight="bold"),
+                                                    ft.VerticalDivider(),
+                                                    ft.Text("Widgets color", text_align="center", expand=5, size=24, weight="bold"),
+                                                ]
+                                            ),
+                                            ft.Divider(),
+                                            ft.Row(
+                                                controls=[
+                                                    self.theme_changer.theme_color_grid,
+                                                    ft.VerticalDivider(),
+                                                    self.theme_changer.widget_color_grid
+                                                ]
+                                            )
+                                        ],
+                                    )
+                                )
+                            )
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER
+                    ),
                 ]
             )
         )
