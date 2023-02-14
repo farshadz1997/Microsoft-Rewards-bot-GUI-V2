@@ -25,11 +25,11 @@ class UserInterface:
         if not self.page.client_storage.get("MRFarmer.has_run_before"):
             self.first_time_setup()
         self.page.theme_mode = self.page.client_storage.get("MRFarmer.theme_mode")
-        self.light_theme_color = ft.colors.TEAL
-        self.dark_theme_color = ft.colors.INDIGO_300
-        self.color_scheme = self.light_theme_color if self.page.theme_mode == "light" else self.dark_theme_color
-        self.page.theme = theme.Theme(color_scheme_seed=LIGHT_SEED_COLOR)
-        self.page.dark_theme = theme.Theme(color_scheme_seed=DARK_SEED_COLOR)
+        self.light_theme_color = self.get_light_theme_color()
+        self.dark_theme_color = self.get_dark_theme_color()
+        self.color_scheme = self.get_color_scheme()
+        self.page.theme = theme.Theme(color_scheme_seed=self.light_theme_color)
+        self.page.dark_theme = theme.Theme(color_scheme_seed=self.dark_theme_color)
         self.page.window_height = 820
         self.page.window_width = 1280
         self.page.window_resizable = False
@@ -128,11 +128,14 @@ class UserInterface:
     def toggle_theme_mode(self, e):
         self.page.theme_mode = "dark" if self.page.theme_mode == "light" else "light"
         self.page.client_storage.set("MRFarmer.theme_mode", self.page.theme_mode)
-        self.color_scheme = self.light_theme_color if self.page.theme_mode == "light" else self.dark_theme_color
-        self.page.snack_bar.bgcolor = self.color_scheme
         self.toggle_theme_button.icon = (
             ft.icons.MODE_NIGHT if self.page.theme_mode == "light" else ft.icons.WB_SUNNY_ROUNDED
         )
+        self.change_color_scheme()
+        
+    def change_color_scheme(self):
+        self.color_scheme = self.get_color_scheme()
+        self.page.snack_bar.bgcolor = self.color_scheme
         self.home_page.toggle_theme_mode(self.color_scheme)
         self.settings_page.toggle_theme_mode(self.color_scheme)
         self.telegram_page.toggle_theme_mode(self.color_scheme)
@@ -170,6 +173,11 @@ class UserInterface:
         self.page.client_storage.set("MRFarmer.pc_search", True)
         self.page.client_storage.set("MRFarmer.mobile_search", True)
         self.page.client_storage.set("MRFarmer.msn_shopping_game", False)
+        ## theme settings
+        self.page.client_storage.set("MRFarmer.light_theme_color", LIGHT_SEED_COLOR)
+        self.page.client_storage.set("MRFarmer.light_widgets_color", LIGHT_SEED_COLOR)
+        self.page.client_storage.set("MRFarmer.dark_theme_color", DARK_SEED_COLOR)
+        self.page.client_storage.set("MRFarmer.dark_widgets_color", ft.colors.INDIGO_300)
         # telegram
         self.page.client_storage.set("MRFarmer.telegram_token", "")
         self.page.client_storage.set("MRFarmer.telegram_chat_id", "")
@@ -177,7 +185,32 @@ class UserInterface:
         # discord
         self.page.client_storage.set("MRFarmer.discord_webhook_url", "")
         self.page.client_storage.set("MRFarmer.send_to_discord", False)
+    
+    def get_light_theme_color(self):
+        if not self.page.client_storage.contains_key("MRFarmer.light_theme_color"):
+            self.page.client_storage.set("MRFarmer.light_theme_color", LIGHT_SEED_COLOR)
+            return LIGHT_SEED_COLOR
+        else:
+            return self.page.client_storage.get("MRFarmer.light_theme_color")
         
+    def get_dark_theme_color(self):
+        if not self.page.client_storage.contains_key("MRFarmer.dark_theme_color"):
+            self.page.client_storage.set("MRFarmer.light_theme_color", DARK_SEED_COLOR)
+            return DARK_SEED_COLOR
+        else:
+            return self.page.client_storage.get("MRFarmer.dark_theme_color")
+        
+    def get_color_scheme(self):
+        if self.page.theme_mode == "light":
+            if not self.page.client_storage.contains_key("MRFarmer.light_widgets_color"):
+                self.page.client_storage.set("MRFarmer.light_widgets_color", LIGHT_SEED_COLOR)
+            return self.page.client_storage.get("MRFarmer.light_widgets_color")
+        elif self.page.theme_mode == "dark":
+            if not self.page.client_storage.contains_key("MRFarmer.dark_widgets_color"):
+                self.page.client_storage.set("MRFarmer.dark_widgets_color", ft.colors.INDIGO_300)
+            return self.page.client_storage.get("MRFarmer.dark_widgets_color")
+            
+    
     def on_route_change(self, e):
         if e.data == "/accounts":
             self.page.floating_action_button.visible = True

@@ -8,79 +8,369 @@ class ThemeChanger(ft.UserControl):
         super().__init__()
         self.parent: UserInterface = parent
         self.page = page
-        self.color_scheme = parent.color_scheme
         self.ui()
+        self.set_color_values()
         self.page.update()
-        # self.set_initial_values()
     
     def color_option_creator(self, color: str):
         return ft.Container(
             bgcolor=color,
             border_radius=ft.border_radius.all(50),
-            height=10,
-            width=10,
             padding=ft.padding.all(5),
             alignment=ft.alignment.center,
-            data=color
+            data=color,
+            tooltip=color
         )
     
     def ui(self):
-        option_dict = {
-            ft.colors.LIGHT_GREEN: self.color_option_creator(ft.colors.LIGHT_GREEN),
-            ft.colors.RED_200: self.color_option_creator(ft.colors.RED_200),
-            ft.colors.AMBER_500: self.color_option_creator(ft.colors.AMBER_500),
-            ft.colors.PINK_300: self.color_option_creator(ft.colors.PINK_300),
-            ft.colors.ORANGE_300: self.color_option_creator(ft.colors.ORANGE_300),
-            ft.colors.LIGHT_BLUE: self.color_option_creator(ft.colors.LIGHT_BLUE),
-            ft.colors.DEEP_ORANGE_300: self.color_option_creator(ft.colors.DEEP_ORANGE_300),
-            ft.colors.PURPLE_100: self.color_option_creator(ft.colors.PURPLE_100),
-            ft.colors.RED_700: self.color_option_creator(ft.colors.RED_700),
-            ft.colors.TEAL_500: self.color_option_creator(ft.colors.TEAL_500),
-            ft.colors.YELLOW_400: self.color_option_creator(ft.colors.YELLOW_400),
-            ft.colors.PURPLE_400: self.color_option_creator(ft.colors.PURPLE_400),
-            ft.colors.BROWN_300: self.color_option_creator(ft.colors.BROWN_300),
-            ft.colors.CYAN_500: self.color_option_creator(ft.colors.CYAN_500),
-            ft.colors.BLUE_GREY_500: self.color_option_creator(ft.colors.BLUE_GREY_500),
+        self.colors = {
+            # red
+            ft.colors.RED: {
+                "theme":self.color_option_creator(ft.colors.RED),
+                "widget": self.color_option_creator(ft.colors.RED)
+            },
+            ft.colors.RED_500: {
+                "theme":self.color_option_creator(ft.colors.RED_500),
+                "widget": self.color_option_creator(ft.colors.RED_500)
+            },
+            ft.colors.RED_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.RED_ACCENT),
+                "widget": self.color_option_creator(ft.colors.RED_ACCENT)
+            },
+            # deep orange
+            ft.colors.DEEP_ORANGE: {
+                "theme":self.color_option_creator(ft.colors.DEEP_ORANGE),
+                "widget": self.color_option_creator(ft.colors.DEEP_ORANGE)
+            },
+            ft.colors.DEEP_ORANGE_500: {
+                "theme":self.color_option_creator(ft.colors.DEEP_ORANGE_500),
+                "widget": self.color_option_creator(ft.colors.DEEP_ORANGE_500)
+            },
+            ft.colors.DEEP_ORANGE_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.DEEP_ORANGE_ACCENT),
+                "widget": self.color_option_creator(ft.colors.DEEP_ORANGE_ACCENT)
+            },
+            # orange
+            ft.colors.ORANGE: {
+                "theme":self.color_option_creator(ft.colors.ORANGE),
+                "widget": self.color_option_creator(ft.colors.ORANGE)
+            },
+            ft.colors.ORANGE_500: {
+                "theme":self.color_option_creator(ft.colors.ORANGE_500),
+                "widget": self.color_option_creator(ft.colors.ORANGE_500)
+            },
+            ft.colors.ORANGE_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.ORANGE_ACCENT),
+                "widget": self.color_option_creator(ft.colors.ORANGE_ACCENT)
+            },
+            # amber
+            ft.colors.AMBER: {
+                "theme":self.color_option_creator(ft.colors.AMBER),
+                "widget": self.color_option_creator(ft.colors.AMBER)
+            },
+            ft.colors.AMBER_500: {
+                "theme":self.color_option_creator(ft.colors.AMBER_500),
+                "widget": self.color_option_creator(ft.colors.AMBER_500)
+            },
+            ft.colors.AMBER_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.AMBER_ACCENT),
+                "widget": self.color_option_creator(ft.colors.AMBER_ACCENT)
+            },
+            # yellow
+            ft.colors.YELLOW: {
+                "theme":self.color_option_creator(ft.colors.YELLOW),
+                "widget": self.color_option_creator(ft.colors.YELLOW)
+            },
+            ft.colors.YELLOW_500: {
+                "theme":self.color_option_creator(ft.colors.YELLOW_500),
+                "widget": self.color_option_creator(ft.colors.YELLOW_500)
+            },
+            ft.colors.YELLOW_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.YELLOW_ACCENT),
+                "widget": self.color_option_creator(ft.colors.YELLOW_ACCENT)
+            },
+            # lime
+            ft.colors.LIME: {
+                "theme":self.color_option_creator(ft.colors.LIME),
+                "widget": self.color_option_creator(ft.colors.LIME)
+            },
+            ft.colors.LIME_500: {
+                "theme":self.color_option_creator(ft.colors.LIME_500),
+                "widget": self.color_option_creator(ft.colors.LIME_500)
+            },
+            ft.colors.LIME_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.LIME_ACCENT),
+                "widget": self.color_option_creator(ft.colors.LIME_ACCENT)
+            },
+            # light green
+            ft.colors.LIGHT_GREEN: {
+                "theme":self.color_option_creator(ft.colors.LIGHT_GREEN),
+                "widget": self.color_option_creator(ft.colors.LIGHT_GREEN)
+            },
+            ft.colors.LIGHT_GREEN_500: {
+                "theme":self.color_option_creator(ft.colors.LIGHT_GREEN_500),
+                "widget": self.color_option_creator(ft.colors.LIGHT_GREEN_500)
+            },
+            ft.colors.LIGHT_GREEN_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.LIGHT_GREEN_ACCENT),
+                "widget": self.color_option_creator(ft.colors.LIGHT_GREEN_ACCENT)
+            },
+            # green
+            ft.colors.GREEN: {
+                "theme":self.color_option_creator(ft.colors.GREEN),
+                "widget": self.color_option_creator(ft.colors.GREEN)
+            },
+            ft.colors.GREEN_500: {
+                "theme":self.color_option_creator(ft.colors.GREEN_500),
+                "widget": self.color_option_creator(ft.colors.GREEN_500)
+            },
+            ft.colors.GREEN_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.GREEN_ACCENT),
+                "widget": self.color_option_creator(ft.colors.GREEN_ACCENT)
+            },
+            # teal
+            ft.colors.TEAL: {
+                "theme":self.color_option_creator(ft.colors.TEAL),
+                "widget": self.color_option_creator(ft.colors.TEAL)
+            },
+            ft.colors.TEAL_500: {
+                "theme":self.color_option_creator(ft.colors.TEAL_500),
+                "widget": self.color_option_creator(ft.colors.TEAL_500)
+            },
+            ft.colors.TEAL_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.TEAL_ACCENT),
+                "widget": self.color_option_creator(ft.colors.TEAL_ACCENT)
+            },
+            # cyan
+            ft.colors.CYAN: {
+                "theme":self.color_option_creator(ft.colors.CYAN),
+                "widget": self.color_option_creator(ft.colors.CYAN)
+            },
+            ft.colors.CYAN_500: {
+                "theme":self.color_option_creator(ft.colors.CYAN_500),
+                "widget": self.color_option_creator(ft.colors.CYAN_500)
+            },
+            ft.colors.CYAN_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.CYAN_ACCENT),
+                "widget": self.color_option_creator(ft.colors.CYAN_ACCENT)
+            },
+            # light blue
+            ft.colors.LIGHT_BLUE: {
+                "theme":self.color_option_creator(ft.colors.LIGHT_BLUE),
+                "widget": self.color_option_creator(ft.colors.LIGHT_BLUE)
+            },
+            ft.colors.LIGHT_BLUE_500: {
+                "theme":self.color_option_creator(ft.colors.LIGHT_BLUE_500),
+                "widget": self.color_option_creator(ft.colors.LIGHT_BLUE_500)
+            },
+            ft.colors.LIGHT_BLUE_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.LIGHT_BLUE_ACCENT),
+                "widget": self.color_option_creator(ft.colors.LIGHT_BLUE_ACCENT)
+            },
+            # blue
+            ft.colors.BLUE: {
+                "theme":self.color_option_creator(ft.colors.BLUE),
+                "widget": self.color_option_creator(ft.colors.BLUE)
+            },
+            ft.colors.BLUE_500: {
+                "theme":self.color_option_creator(ft.colors.BLUE_500),
+                "widget": self.color_option_creator(ft.colors.BLUE_500)
+            },
+            ft.colors.BLUE_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.BLUE_ACCENT),
+                "widget": self.color_option_creator(ft.colors.BLUE_ACCENT)
+            },
+            # pink
+            ft.colors.PINK: {
+                "theme":self.color_option_creator(ft.colors.PINK),
+                "widget": self.color_option_creator(ft.colors.PINK)
+            },
+            ft.colors.PINK_500: {
+                "theme":self.color_option_creator(ft.colors.PINK_500),
+                "widget": self.color_option_creator(ft.colors.PINK_500)
+            },
+            ft.colors.PINK_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.PINK_ACCENT),
+                "widget": self.color_option_creator(ft.colors.PINK_ACCENT)
+            },
+            # indigo
+            ft.colors.INDIGO: {
+                "theme":self.color_option_creator(ft.colors.INDIGO),
+                "widget": self.color_option_creator(ft.colors.INDIGO)
+            },
+            ft.colors.INDIGO_300: {
+                "theme":self.color_option_creator(ft.colors.INDIGO_300),
+                "widget": self.color_option_creator(ft.colors.INDIGO_300)
+            },
+            ft.colors.INDIGO_500: {
+                "theme":self.color_option_creator(ft.colors.INDIGO_500),
+                "widget": self.color_option_creator(ft.colors.INDIGO_500)
+            },
+            ft.colors.INDIGO_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.INDIGO_ACCENT),
+                "widget": self.color_option_creator(ft.colors.INDIGO_ACCENT)
+            },
+            # purple
+            ft.colors.PURPLE: {
+                "theme":self.color_option_creator(ft.colors.PURPLE),
+                "widget": self.color_option_creator(ft.colors.PURPLE)
+            },
+            ft.colors.PURPLE_500: {
+                "theme":self.color_option_creator(ft.colors.PURPLE_500),
+                "widget": self.color_option_creator(ft.colors.PURPLE_500)
+            },
+            ft.colors.PURPLE_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.PURPLE_ACCENT),
+                "widget": self.color_option_creator(ft.colors.PURPLE_ACCENT)
+            },
+            # deep purple
+            ft.colors.DEEP_PURPLE: {
+                "theme":self.color_option_creator(ft.colors.DEEP_PURPLE),
+                "widget": self.color_option_creator(ft.colors.DEEP_PURPLE)
+            },
+            ft.colors.DEEP_PURPLE_500: {
+                "theme":self.color_option_creator(ft.colors.DEEP_PURPLE_500),
+                "widget": self.color_option_creator(ft.colors.DEEP_PURPLE_500)
+            },
+            ft.colors.DEEP_PURPLE_ACCENT: {
+                "theme":self.color_option_creator(ft.colors.DEEP_PURPLE_ACCENT),
+                "widget": self.color_option_creator(ft.colors.DEEP_PURPLE_ACCENT)
+            },
+            # brown
+            ft.colors.BROWN: {
+                "theme":self.color_option_creator(ft.colors.BROWN),
+                "widget": self.color_option_creator(ft.colors.BROWN)
+            },
+            ft.colors.BROWN_500: {
+                "theme":self.color_option_creator(ft.colors.BROWN_500),
+                "widget": self.color_option_creator(ft.colors.BROWN_500)
+            },
+            ft.colors.BROWN_800: {
+                "theme":self.color_option_creator(ft.colors.BROWN_800),
+                "widget": self.color_option_creator(ft.colors.BROWN_800)
+            },
+            # blue gray
+            ft.colors.BLUE_GREY: {
+                "theme":self.color_option_creator(ft.colors.BLUE_GREY),
+                "widget": self.color_option_creator(ft.colors.BLUE_GREY)
+            },
+            ft.colors.BLUE_GREY_500: {
+                "theme":self.color_option_creator(ft.colors.BLUE_GREY),
+                "widget": self.color_option_creator(ft.colors.BLUE_GREY)
+            },
+            ft.colors.BLUE_GREY_900: {
+                "theme":self.color_option_creator(ft.colors.BLUE_GREY_900),
+                "widget": self.color_option_creator(ft.colors.BLUE_GREY_900)
+            },
         }
         
         self.theme_color_grid = ft.GridView(
             expand=5,
-            runs_count=6,
+            runs_count=11,
         )
-        for color in option_dict.values():
-            color.on_click = self.set_theme_color
-            self.theme_color_grid.controls.append(color)
-            
+        for color in self.colors.values():
+            color["theme"].on_click = self.set_theme_color
+            self.theme_color_grid.controls.append(color["theme"])
+        
         self.widget_color_grid = ft.GridView(
             expand=5,
-            runs_count=6
+            runs_count=11
         )
-        for color in option_dict.values():
-            color.on_click = self.set_widget_color
-            self.widget_color_grid.controls.append(color)
+        for color in self.colors.values():
+            color["widget"].on_click = self.set_widget_color
+            self.widget_color_grid.controls.append(color["widget"])
+            
+        self.theme_card = ft.Card(
+            expand=True,
+            content=ft.Container(
+                margin=ft.margin.all(15),
+                content=ft.Column(
+                    controls=[
+                        ft.Row(
+                            controls=[
+                                ft.ListTile(
+                                    title=ft.Text("Theme color"),
+                                    leading=ft.Icon(ft.icons.COLOR_LENS),
+                                    subtitle=ft.Text("Change main color of theme"),
+                                    expand=5
+                                ),
+                                ft.VerticalDivider(),
+                                ft.ListTile(
+                                    title=ft.Text("Widgets color"),
+                                    leading=ft.Icon(ft.icons.COLOR_LENS),
+                                    subtitle=ft.Text("Color of widgets such as textfields, buttons, etc"),
+                                    expand=5
+                                ),
+                            ]
+                        ),
+                        ft.Divider(),
+                        ft.Row(
+                            controls=[
+                                self.theme_color_grid,
+                                ft.VerticalDivider(),
+                                self.widget_color_grid
+                            ],
+                            alignment="center"
+                        )
+                    ],
+                )
+            )
+        )
             
         
     def build(self):
-        return self.theme_changer
+        return self.theme_card
         
     def change_theme(self, theme: str):
         self.parent.toggle_theme_mode(theme)
     
     def set_theme_color(self, e):
-        pass
-    
-    def set_widget_color(self, e):
-        pass
-        
-    def set_initial_values(self):
-        if self.parent.theme == "light":
-            self.light_theme_button.disabled = True
-            self.dark_theme_button.disabled = False
+        self.theme_color_grid.data = e.control.data
+        for k, v in self.colors.items():
+            if k == e.control.data:
+                v["theme"].border = ft.border.all(3, ft.colors.BLACK87)
+            else:
+                v["theme"].border = None
+        if self.page.theme_mode == "dark":
+            self.page.client_storage.set("MRFarmer.dark_theme_color", e.control.data)
+            self.page.dark_theme.color_scheme_seed = e.control.data
         else:
-            self.light_theme_button.disabled = False
-            self.dark_theme_button.disabled = True
-
-
+            self.page.client_storage.set("MRFarmer.light_theme_color", e.control.data)
+            self.page.theme.color_scheme_seed = e.control.data
+        self.page.update()
+        
+    def set_widget_color(self, e):
+        self.widget_color_grid.data = e.control.data
+        for k, v in self.colors.items():
+            if k == e.control.data:
+                v["widget"].border = ft.border.all(3, ft.colors.BLACK87)
+            else:
+                v["widget"].border = None
+        if self.page.theme_mode == "dark":
+            self.page.client_storage.set("MRFarmer.dark_widgets_color", e.control.data)
+        else:
+            self.page.client_storage.set("MRFarmer.light_widgets_color", e.control.data)
+        self.parent.change_color_scheme()
+        self.page.update()
+        
+    def set_color_values(self):
+        if self.page.theme_mode == "dark":
+            theme_color = self.page.client_storage.get("MRFarmer.dark_theme_color")
+            widgets_color = self.page.client_storage.get("MRFarmer.dark_widgets_color")
+        else:
+            theme_color = self.page.client_storage.get("MRFarmer.light_theme_color")
+            widgets_color = self.page.client_storage.get("MRFarmer.light_widgets_color")
+        for k, v in self.colors.items():
+            if k == theme_color:
+                v["theme"].border = ft.border.all(3, ft.colors.BLACK87)
+            else:
+                v["theme"].border = None
+            if k == widgets_color:
+                v["widget"].border = ft.border.all(3, ft.colors.BLACK87)
+            else:
+                v["widget"].border = None
+            
+            
 class Settings(ft.UserControl):
     def __init__(self, parent, page: ft.Page):
         from .app_layout import UserInterface
@@ -341,33 +631,7 @@ class Settings(ft.UserControl):
                         alignment=ft.MainAxisAlignment.CENTER,
                     ),
                     ft.Row(
-                        controls=[
-                            ft.Card(
-                                expand=True,
-                                content=ft.Container(
-                                    margin=ft.margin.all(15),
-                                    content=ft.Column(
-                                        controls=[
-                                            ft.Row(
-                                                controls=[
-                                                    ft.Text("Theme color", text_align="center", expand=5, size=24, weight="bold"),
-                                                    ft.VerticalDivider(),
-                                                    ft.Text("Widgets color", text_align="center", expand=5, size=24, weight="bold"),
-                                                ]
-                                            ),
-                                            ft.Divider(),
-                                            ft.Row(
-                                                controls=[
-                                                    self.theme_changer.theme_color_grid,
-                                                    ft.VerticalDivider(),
-                                                    self.theme_changer.widget_color_grid
-                                                ]
-                                            )
-                                        ],
-                                    )
-                                )
-                            )
-                        ],
+                        controls=[self.theme_changer.build()],
                         alignment=ft.MainAxisAlignment.CENTER
                     ),
                 ]
@@ -484,4 +748,5 @@ class Settings(ft.UserControl):
         self.pc_search_switch.active_color = color_scheme
         self.mobile_search_switch.active_color = color_scheme
         self.msn_shopping_game_switch.active_color = color_scheme
+        self.theme_changer.set_color_values()
     
