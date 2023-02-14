@@ -1445,6 +1445,8 @@ class Farmer:
                 points = int(self.browser.find_element(By.ID, 'fly_id_rc').get_attribute('innerHTML'))
         except NoSuchElementException:
             points = self.points_counter
+        else:
+            self.point_counter = points
         return points
     
     def disable_stop_button(self, state: bool):
@@ -1502,15 +1504,12 @@ class Farmer:
 
                         if self.page.client_storage.get("MRFarmer.daily_quests") and not account["log"]["Daily"]:
                             self.complete_daily_set()
-                            self.home_page.update_points_counter(self.points_counter)
 
                         if self.page.client_storage.get("MRFarmer.punch_cards") and not account["log"]["Punch cards"]:
                             self.complete_punch_cards()
-                            self.home_page.update_points_counter(self.points_counter)
 
                         if self.page.client_storage.get("MRFarmer.more_activities") and not account["log"]["More promotions"]:
                             self.complete_more_promotions()
-                            self.home_page.update_points_counter(self.points_counter)
 
                         if self.page.client_storage.get("MRFarmer.msn_shopping_game") and not account["log"]["MSN shopping game"]:
                             self.complete_msn_shopping_game_quiz()
