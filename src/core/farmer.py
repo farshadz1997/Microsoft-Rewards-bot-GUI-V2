@@ -1623,9 +1623,11 @@ class Farmer:
                     break
                 
                 except (InvalidSessionIdException, MaxRetryError, NewConnectionError):
-                    if isinstance(self.browser, WebDriver):
+                    try:
                         self.browser.quit()
-                        self.browser = None
+                    except:
+                        pass
+                    self.browser = None
                     if not self.parent.is_farmer_running:
                         self.home_page.finished()
                         return None
@@ -1645,8 +1647,10 @@ class Farmer:
                     return None
                     
                 except (Exception, FunctionTimedOut) as e:
-                    if isinstance(self.browser, WebDriver):
+                    try:
                         self.browser.quit()
+                    except:
+                        pass
                     self.starting_points = None
                     self.browser = None
                     if self.page.client_storage.get("MRFarmer.save_errors"):
