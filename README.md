@@ -27,8 +27,8 @@ Follow these steps to run the app:
 
 ## Features
 I added all features from two last version plus some new features:
-  - Account management and display account log
-  - Support proxy for each account (Proxy must not need to login)
+  - Account management and display account log, also you can import your accounts from other versions of my bots.
+  - Support proxy for each account (Proxy without authentication)
   - Support Mobile user agent for each account (Don't add or change this if you don't know what this is)
   - You can choose to which part of Rewards you want to be done by Bot
   - Support headless browser
@@ -40,4 +40,5 @@ I added all features from two last version plus some new features:
   - Timer to run the Bot at your choosen time
   - You can use Edge webdriver instead of Chrome
   - Send daily report to your Discord server and your Telegram
-  
+  - Easily update user agents without changing code
+  - Theme changer for the app
