@@ -42,3 +42,11 @@ I added all features from two last version plus some new features:
   - Send daily report to your Discord server and your Telegram
   - Easily update user agents without changing code
   - Theme changer for the app
+  
+  ## Support me
+Your support will be much appreciated
+
+  - <b>BTC (BTC network):</b> bc1qn52jx934nd54vhcv6x5xxsrc7z2qvwf6atcut3
+  - <b>ETH (ERC20):</b> 0x2486D75EC2675833569b85d77b01C2c37097ECc2
+  - <b>LTC:</b> ltc1qc03mnemxewn6z0chfc20yw4samucg6kczmwuf8
+  - <b>USDT (ERC20):</b> 0x2486D75EC2675833569b85d77b01C2c37097ECc2
