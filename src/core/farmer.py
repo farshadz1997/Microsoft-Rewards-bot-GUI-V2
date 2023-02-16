@@ -40,8 +40,8 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-PC_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61'
-MOBILE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 12; SM-N9750) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36 EdgA/109.0.1518.53'
+PC_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.46'
+MOBILE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 12; SM-N9750) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Mobile Safari/537.36 EdgA/110.0.1587.41'
 
 
 class Farmer:
@@ -278,7 +278,7 @@ class Farmer:
         except ValueError:
             return ""
     
-    def is_proxy_working(proxy: str):
+    def is_proxy_working(self, proxy: str):
         '''Check if proxy is working or not'''
         try:
             requests.get("https://www.google.com/", proxies={"https": proxy}, timeout=5)
@@ -506,6 +506,7 @@ class Farmer:
             elif self.browser.find_element(By.XPATH, '//*[@id="error"]/h1').get_attribute('innerHTML') == 'Microsoft Rewards is not available in this country or region.':
                 raise RegionException('Microsoft Rewards is not available in your region !')
         except NoSuchElementException:
+            self.wait_until_visible(By.ID, 'app-host', 30)
             points = self.get_account_points()
             self.home_page.update_points_counter(points)
             if isMobile:
