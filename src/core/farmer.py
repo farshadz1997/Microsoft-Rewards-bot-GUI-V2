@@ -494,7 +494,12 @@ class Farmer:
         self.browser.get(self.base_url)
         try:
             time.sleep(10 if not self.page.client_storage.get("MRFarmer.fast") else 5)
-            self.browser.find_element(By.ID, 'raf-signin-link-id').click()
+            # click on sign up button if needed
+            if self.is_element_exists(By.ID, "start-earning-rewards-link"):
+                self.browser.find_element(By.ID, "start-earning-rewards-link").click()
+                time.sleep(5)
+                self.browser.refresh()
+                time.sleep(5)
         except:
             pass
         time.sleep(10 if not self.page.client_storage.get("MRFarmer.fast") else 5)
