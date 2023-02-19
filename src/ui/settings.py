@@ -505,12 +505,12 @@ class Settings(ft.UserControl):
             tooltip="Use Microsoft Edge webdriver instead of Chrome webdriver",
             on_change=lambda e: self.switches_on_change(e, self.edge_switch)
         )
-        self.use_proxy = ft.Switch(
+        self.use_proxy_switch = ft.Switch(
             label="Use proxy",
             value=False,
             active_color=self.color_scheme,
             tooltip="Use proxy in browser instance if you have set it in your account",
-            on_change=lambda e: self.switches_on_change(e, self.use_proxy)
+            on_change=lambda e: self.switches_on_change(e, self.use_proxy_switch)
         )
         self.auto_start_switch = ft.Switch(
             label="Auto start",
@@ -535,7 +535,7 @@ class Settings(ft.UserControl):
                             spacing=130
                         ),
                         ft.Row(
-                            [self.session_switch, self.use_proxy],
+                            [self.session_switch, self.use_proxy_switch],
                             spacing=140,
                         ),
                         ft.Row(
@@ -649,7 +649,7 @@ class Settings(ft.UserControl):
         self.save_errors_switch.value = self.page.client_storage.get("MRFarmer.save_errors")
         self.shutdown_switch.value = self.page.client_storage.get("MRFarmer.shutdown")
         self.edge_switch.value = self.page.client_storage.get("MRFarmer.edge_webdriver")
-        self.edge_switch.value = self.page.client_storage.get("MRFarmer.use_proxy")
+        self.use_proxy_switch.value = self.page.client_storage.get("MRFarmer.use_proxy")
         self.auto_start_switch.value = self.page.client_storage.get("MRFarmer.auto_start")
         # farmer settings
         self.daily_quests_switch.value = self.page.client_storage.get("MRFarmer.daily_quests")
@@ -739,7 +739,7 @@ class Settings(ft.UserControl):
         self.save_errors_switch.active_color = color_scheme
         self.shutdown_switch.active_color = color_scheme
         self.edge_switch.active_color = color_scheme
-        self.use_proxy.active_color = color_scheme
+        self.use_proxy_switch.active_color = color_scheme
         self.auto_start_switch.active_color = color_scheme
         # farmer settings
         self.daily_quests_switch.active_color = color_scheme
