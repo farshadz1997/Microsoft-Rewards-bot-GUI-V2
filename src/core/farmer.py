@@ -206,6 +206,8 @@ class Farmer:
                 account["log"]["MSN shopping game"] = False
                 account["log"]["PC searches"] = False 
                 account["log"]["Mobile searches"] = False
+            if not isinstance(account["log"]["Points"], int):
+                account["log"]["Points"] = 0
         self.update_accounts()
         self.home_page.update_overall_infos()
         
@@ -394,6 +396,8 @@ class Farmer:
         self.browser.get('https://login.live.com/')
         # Check if account is already logged in
         if self.page.client_storage.get("MRFarmer.session"):
+            if "https://" in self.browser.title:
+                time.sleep(15)
             if self.browser.title == "We're updating our terms" or self.is_element_exists(By.ID, 'iAccrualForm'):
                 time.sleep(2)
                 self.browser.find_element(By.ID, 'iNext').click()
@@ -401,6 +405,11 @@ class Farmer:
             if self.browser.title == 'Is your security info still accurate?' or self.is_element_exists(By.ID, 'iLooksGood'):
                 time.sleep(2)
                 self.browser.find_element(By.ID, 'iLooksGood').click()
+                time.sleep(5)
+            # Click No thanks on break free from password question
+            if self.is_element_exists(By.ID, "setupAppDesc"):
+                time.sleep(2)
+                self.browser.find_element(By.ID, "iCancel").click()
                 time.sleep(5)
             if self.browser.title == 'Microsoft account | Home' or self.is_element_exists(By.ID, 'navs_container'):
                 self.home_page.update_detail("Microsoft Rewards...")
@@ -455,6 +464,11 @@ class Farmer:
             else:
                 # Click No.
                 self.browser.find_element(By.ID, 'idBtn_Back').click()
+            # Click No thanks on break free from password question
+            if self.is_element_exists(By.ID, "setupAppDesc"):
+                time.sleep(2)
+                self.browser.find_element(By.ID, "iCancel").click()
+                time.sleep(5)
         except NoSuchElementException:
             # Check for if account has been locked.
             if self.browser.title == "Your account has been temporarily suspended" or self.is_element_exists(By.CLASS_NAME, "serviceAbusePageContainer  PageContainer"):
@@ -1557,7 +1571,10 @@ class Farmer:
                         self.home_page.update_section("-")
 
                     self.finished_accounts.append(account["username"])
-                    account["log"]["Today's points"] = self.points_counter - self.starting_points
+                    if account["log"]["Points"] > 0 and self.points_counter >= account["log"]["Points"]:
+                        account["log"]["Today's points"] = self.points_counter - account["log"]["Points"]
+                    else:
+                        account["log"]["Today's points"] = self.points_counter - self.starting_points
                     account["log"]["Points"] = self.points_counter
                     
                     if (
