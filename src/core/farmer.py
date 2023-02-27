@@ -929,7 +929,7 @@ class Farmer:
                             time.sleep(2)
                         self.browser.find_element(By.ID, "rqAnswerOption" + str(i)).click()
                         time.sleep(5)
-                        if not self.wait_until_question_refresh(self.browser):
+                        if not self.wait_until_question_refresh():
                             return
                         break
                 time.sleep(5)
@@ -1075,7 +1075,9 @@ class Farmer:
                             else:
                                 self.home_page.update_detail(f"Quiz of card {str(cardNumber)}")
                                 self.complete_daily_set_variable_activity(cardNumber)
-            except:
+            except Exception as e:
+                if self.page.client_storage.get("MRFarmer.save_errors"):
+                    self.save_errors(str(e))
                 self.reset_tabs()
         self.accounts[self.account_index]["log"]["Daily"] = True
         self.update_accounts() 
@@ -1145,7 +1147,9 @@ class Farmer:
                 if punchCard['parentPromotion'] != None and punchCard['childPromotions'] != None and punchCard['parentPromotion']['complete'] == False and punchCard['parentPromotion']['pointProgressMax'] != 0:
                     url = punchCard['parentPromotion']['attributes']['destination']
                     self.complete_punch_card(url, punchCard['childPromotions'])
-            except:
+            except Exception as e:
+                if self.page.client_storage.get("MRFarmer.save_errors"):
+                    self.save_errors(str(e))
                 self.reset_tabs()
         time.sleep(2)
         self.browser.get(self.base_url)
@@ -1296,7 +1300,9 @@ class Farmer:
                     and promotion['destinationUrl'] == self.base_url:
                         self.home_page.update_detail("Search card")
                         self.complete_more_promotion_search(i)
-            except:
+            except Exception as e:
+                if self.page.client_storage.get("MRFarmer.save_errors"):
+                    self.save_errors(str(e))
                 self.reset_tabs()
         self.home_page.update_section("-")
         self.home_page.update_detail("-")
