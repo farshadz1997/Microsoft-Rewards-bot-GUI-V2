@@ -17,3 +17,11 @@ class UnusualActivityException(Exception):
 
 class UnhandledException(Exception):
     """Exception raised when Microsoft returns unhandled error"""
+    
+
+class GetSearchWordsException(Exception):
+    """Exception raised when Microsoft returns error while getting search words"""
+    
+    
+class GamingCardNotFound(Exception):
+    """Exception raised when Microsoft returns error while locating gaming card failed"""

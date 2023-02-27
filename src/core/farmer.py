@@ -36,7 +36,7 @@ from selenium.common.exceptions import (ElementNotInteractableException,
                                         WebDriverException)
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
@@ -106,7 +106,7 @@ class Farmer:
                 status = '⚠️ Unusual activity detected'
                 message += f"{index}. {account['username']}\n📝 Status: {status}\n\n"
             elif account["log"]['Last check'] == 'Unknown error':
-                status = '⛔️ Unknow error occured'
+                status = '⛔️ Unknown error occurred'
                 message += f"{index}. {account['username']}\n📝 Status: {status}\n\n"
             else:
                 status = f'Farmed on {account["log"]["Last check"]}'
@@ -396,8 +396,14 @@ class Farmer:
         self.browser.get('https://login.live.com/')
         # Check if account is already logged in
         if self.page.client_storage.get("MRFarmer.session"):
-            if "https://" in self.browser.title:
-                time.sleep(15)
+            if self.browser.title == "":
+                time.sleep(10)
+                wait = WebDriverWait(self.browser, 10)
+                wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                wait.until(EC.presence_of_all_elements_located)
+                wait.until(EC.title_contains(""))
+                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "html[lang]")))
+                wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
             if self.browser.title == "We're updating our terms" or self.is_element_exists(By.ID, 'iAccrualForm'):
                 time.sleep(2)
                 self.browser.find_element(By.ID, 'iNext').click()
@@ -652,10 +658,10 @@ class Farmer:
             self.home_page.update_points_counter(self.points_counter)
             
     def wait_until_visible(self, by_: By, selector: str, time_to_wait: int = 10):
-        WebDriverWait(self.browser, time_to_wait).until(ec.visibility_of_element_located((by_, selector)))
+        WebDriverWait(self.browser, time_to_wait).until(EC.visibility_of_element_located((by_, selector)))
 
     def wait_until_clickable(self, by_: By, selector: str, time_to_wait: int = 10):
-        WebDriverWait(self.browser, time_to_wait).until(ec.element_to_be_clickable((by_, selector)))
+        WebDriverWait(self.browser, time_to_wait).until(EC.element_to_be_clickable((by_, selector)))
 
     def wait_until_question_refresh(self):
         tries = 0
@@ -776,9 +782,14 @@ class Farmer:
         self.home_page.update_detail(f"0/{numberOfSearches}")
         i = 0
         r = RandomWords()
-        search_terms = r.get_random_words(limit = numberOfSearches)
-        if search_terms == None:
+        try:
+            search_terms = r.get_random_words(limit = numberOfSearches)
+            if search_terms is None:
+                raise Exception
+        except Exception:
             search_terms = self.get_google_trends(numberOfSearches)
+        if len(search_terms) == 0:
+            raise GetSearchWordsException("Couldn't get search words from sources")
         for word in search_terms:
             i += 1
             self.home_page.update_detail(f"{i}/{numberOfSearches}")
@@ -1298,12 +1309,12 @@ class Farmer:
             """Returns childrens of shadow element"""
             if index is not None:
                 shadow_root = WebDriverWait(self.browser, 45).until(
-                    ec.visibility_of(self.browser.execute_script('return arguments[0].shadowRoot.children', element)[index])
+                    EC.visibility_of(self.browser.execute_script('return arguments[0].shadowRoot.children', element)[index])
                 )
             else:
                 # wait to visible one element then get the list
                 WebDriverWait(self.browser, 45).until(
-                    ec.visibility_of(self.browser.execute_script('return arguments[0].shadowRoot.children', element)[0])
+                    EC.visibility_of(self.browser.execute_script('return arguments[0].shadowRoot.children', element)[0])
                 )
                 shadow_root = self.browser.execute_script('return arguments[0].shadowRoot.children', element)
             return shadow_root
@@ -1312,17 +1323,17 @@ class Farmer:
             children = self.browser.execute_script('return arguments[0].children', element)
             return children
         
-        def get_sign_in_state() -> WebElement:
+        def get_sign_in_button() -> WebElement:
             """check wheather user is signed in or not and return the button to sign in"""
             script_to_user_pref_container = 'document.getElementsByTagName("shopping-page-base")[0]\
                 .shadowRoot.children[0].children[1].children[0]\
                 .shadowRoot.children[0].shadowRoot.children[0]\
                 .getElementsByClassName("user-pref-container")[0]'
-            WebDriverWait(self.browser, 60).until(ec.visibility_of(
+            WebDriverWait(self.browser, 60).until(EC.visibility_of(
                 self.browser.execute_script(f'return {script_to_user_pref_container}')
                 )
             )
-            button = WebDriverWait(self.browser, 60).until(ec.visibility_of(
+            button = WebDriverWait(self.browser, 60).until(EC.visibility_of(
                     self.browser.execute_script(
                         f'return {script_to_user_pref_container}.\
                         children[0].children[0].shadowRoot.children[0].\
@@ -1334,7 +1345,7 @@ class Farmer:
             
         def sign_in():
             self.home_page.update_detail("Signing in")
-            sign_in_button = get_sign_in_state()
+            sign_in_button = get_sign_in_button()
             sign_in_button.click()
             time.sleep(5)
             self.wait_until_visible(By.ID, 'newSessionLink', 10)
@@ -1343,17 +1354,19 @@ class Farmer:
             self.wait_until_visible(By.TAG_NAME, 'shopping-page-base', 60)
             expand_shadow_element(self.browser.find_element(By.TAG_NAME, 'shopping-page-base'), 0)
             self.home_page.update_detail("Checking signed in state")
-            get_sign_in_state()
+            get_sign_in_button()
             time.sleep(5 if self.page.client_storage.get("MRFarmer.fast") else 10)
         
-        def get_gaming_card() -> WebElement:
+        def get_gaming_card() -> Union[WebElement, bool]:
             shopping_page_base_childs = expand_shadow_element(self.browser.find_element(By.TAG_NAME, 'shopping-page-base'), 0)
             shopping_homepage = shopping_page_base_childs.find_element(By.TAG_NAME, 'shopping-homepage')
             msft_feed_layout = expand_shadow_element(shopping_homepage, 0).find_element(By.TAG_NAME, 'msft-feed-layout')
-            msn_shopping_game_pane = expand_shadow_element(msft_feed_layout)
-            for element in msn_shopping_game_pane:
-                if element.get_attribute("gamestate") == "active":
-                    return element
+            cards = expand_shadow_element(msft_feed_layout)
+            for card in cards:
+                if card.get_attribute("gamestate") == "active":
+                    return card
+            else:
+                return False
         
         def click_correct_answer():
             options_container = expand_shadow_element(gaming_card, 1)
@@ -1365,7 +1378,7 @@ class Farmer:
             time.sleep(1)
             # click 'select' button
             select_button = correct_answer.find_element(By.CLASS_NAME, 'shopping-select-overlay-button')
-            WebDriverWait(self.browser, 5).until(ec.element_to_be_clickable(select_button))
+            WebDriverWait(self.browser, 5).until(EC.element_to_be_clickable(select_button))
             select_button.click()
         
         def click_play_again():
@@ -1384,7 +1397,7 @@ class Farmer:
                 time.sleep(15)
                 self.home_page.update_detail("Waiting for sign in state")
                 try:
-                    sign_in_button = get_sign_in_state()
+                    sign_in_button = get_sign_in_button()
                 except:
                     if tries == 4:
                         raise ElementNotVisibleException("Sign in button did not show up")
@@ -1395,6 +1408,19 @@ class Farmer:
                 sign_in()
             self.home_page.update_detail("Locating gaming card")
             gaming_card = get_gaming_card()
+            scrolls = 0
+            while not gaming_card and scrolls <= 5:
+                scrolls += 1
+                self.home_page.update_detail(f"Locating gaming card - scrolling ({scrolls}/5)")
+                self.browser.execute_script("window.scrollBy(0, 300);")
+                time.sleep(10)
+                gaming_card = get_gaming_card()
+                if gaming_card:
+                    self.browser.execute_script("arguments[0].scrollIntoView();", gaming_card)
+                    self.home_page.update_detail("Gaming card found")
+                    time.sleep(random.randint(7, 10))
+                if scrolls == 5 and not gaming_card:
+                    raise GamingCardNotFound("Gaming card not found")
             self.home_page.update_detail("Answering questions")
             for _ in range(10):
                 try:
@@ -1403,13 +1429,14 @@ class Farmer:
                     time.sleep(random.randint(5, 7))
                 except (NoSuchElementException, JavascriptException):
                     break
-        except:
+        except GamingCardNotFound:
+            self.home_page.update_detail("Gaming card not found")
+        except Exception:
             self.home_page.update_detail("Failed to complete")
-            self.reset_tabs()
         else:
             self.home_page.update_detail("Completed")
-            self.browser.get(self.base_url)
         finally:
+            self.browser.get(self.base_url)
             self.accounts[self.account_index]["log"]["MSN shopping game"] = True
             self.update_accounts()
             self.home_page.update_section("-")
@@ -1636,12 +1663,23 @@ class Farmer:
                     self.home_page.update_section("Not available in your region")
                     return None
                 
+                except GetSearchWordsException:
+                    self.browser.quit()
+                    self.browser = None
+                    account["log"]["Last check"] = "Couldn't get search words"
+                    self.finished_accounts.append(account["username"])       
+                    self.update_accounts()
+                    self.accounts_page.sync_accounts()
+                    self.clean_logs()
+                    break
+                
                 except UnhandledException:
                     self.browser.quit()
                     self.browser = None
                     account["log"]["Last check"] = "Unknown error"
                     self.finished_accounts.append(account["username"])
                     self.update_accounts()
+                    self.accounts_page.sync_accounts()
                     self.clean_logs()
                     break
                 

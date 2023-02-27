@@ -128,6 +128,8 @@ class SingleAccountCardCreator:
             return ft.Icon(ft.icons.LOCK, color=ft.colors.AMBER_500)
         elif self.account["log"]["Last check"] == "Unusual activity detected":
             return ft.Icon(ft.icons.WARNING, color=ft.colors.AMBER_500)
+        elif self.account["log"]["Last check"] == "Couldn't get search words":
+            return ft.Icon(ft.icons.WARNING, color=ft.colors.AMBER_500)
         elif self.account["log"]["Last check"] == "Unknown error":
             return ft.Icon(ft.icons.ERROR, color=ft.colors.AMBER_500)
         else:
