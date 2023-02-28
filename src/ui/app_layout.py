@@ -32,11 +32,15 @@ class UserInterface:
         self.page.dark_theme = theme.Theme(color_scheme_seed=self.dark_theme_color)
         self.page.window_height = 820
         self.page.window_width = 1280
-        self.page.window_resizable = False
+        self.page.window_max_height = 820
+        self.page.window_max_width = 1280
+        self.page.window_min_height = 700
+        self.page.window_min_width = 1080
+        self.page.on_resize = self.on_page_resize
         self.page.window_maximizable = False
         self.page.window_center()
         self.page.on_route_change = self.on_route_change
-        self.page.on_error = self.save_crash_error
+        self.page.on_error = self.save_app_error
         self.is_farmer_running: bool = False
         self.ui()
         self.page.update()
@@ -210,7 +214,6 @@ class UserInterface:
                 self.page.client_storage.set("MRFarmer.dark_widgets_color", ft.colors.INDIGO_300)
             return self.page.client_storage.get("MRFarmer.dark_widgets_color")
             
-    
     def on_route_change(self, e):
         if e.data == "/accounts":
             self.page.floating_action_button.visible = True
@@ -238,11 +241,14 @@ class UserInterface:
         with open(self.page.client_storage.get("MRFarmer.accounts_path"), "w") as file:
             file.write(json.dumps(self.page.session.get("MRFarmer.accounts"), indent = 4))
     
-    def save_crash_error(self, e):
-        with open(f"{Path.cwd()}/errors.txt", "a") as f:
-            f.write(f"\n-------------------{datetime.now()}-------------------\r\n")
-            f.write("APP_ERROR:\n")
-            f.write(f"{e.data}\n")
+    def save_app_error(self, e):
+        if e.data == "type 'bool' is not a subtype of type 'List<dynamic>?' in type cast":
+            return
+        if not self.page.client_storage.get("MRFarmer.save_errors"):
+            with open(f"{Path.cwd()}/errors.txt", "a") as f:
+                f.write(f"\n-------------------{datetime.now()}-------------------\r\n")
+                f.write("APP_ERROR:\n")
+                f.write(f"{e.data}\n")
             
     def get_farming_status(self):
         """checks by farmer to know stop or continue farming"""
@@ -254,4 +260,13 @@ class UserInterface:
             self.home_page.start(None)
         elif not self.page.session.contains_key("MRFarmer.accounts") and self.page.client_storage.get("MRFarmer.auto_start"):
             self.display_error("Auto start failed", "Could not start auto farming because there is no accounts")
+            self.page.update()
+            
+    def on_page_resize(self, e: ft.ControlEvent):
+        width = float(e.data.split(",")[0])
+        if width < 1140:
+            self.settings_page.msn_shopping_game_switch.label = "MSN"
+            self.page.update()
+        elif width >= 1140 and self.settings_page.msn_shopping_game_switch.label == "MSN":
+            self.settings_page.msn_shopping_game_switch.label = "MSN shopping Game"
             self.page.update()

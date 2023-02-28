@@ -1437,7 +1437,9 @@ class Farmer:
                     break
         except GamingCardNotFound:
             self.home_page.update_detail("Gaming card not found")
-        except Exception:
+        except Exception as e:
+            if self.page.client_storage.get("MRFarmer.save_errors"):
+                self.save_errors(str(e))
             self.home_page.update_detail("Failed to complete")
         else:
             self.home_page.update_detail("Completed")

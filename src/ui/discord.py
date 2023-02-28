@@ -82,8 +82,9 @@ class Discord(ft.UserControl):
                 controls=[
                     self.progress_ring,
                     self.send_icon,
-                    ft.Text(value="Send", text_align="center", expand=True)
-                ]
+                    ft.Text(value="Send", text_align="center")
+                ],
+                alignment="center"
             ),
         )
         self.discord_card = ft.Card(

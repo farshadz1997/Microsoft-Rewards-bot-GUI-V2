@@ -60,7 +60,8 @@ class Home(ft.UserControl):
             max_length=5,
         )
         self.timer_switch = ft.Switch(
-            label="Enable timer",
+            label="Timer",
+            tooltip="By enabling this bot will run at the time you entered when you start it",
             active_color=self.color_scheme,
             on_change=self.timer_switch_event,
             expand=1,

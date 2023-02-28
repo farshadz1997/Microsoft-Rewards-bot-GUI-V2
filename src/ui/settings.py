@@ -502,6 +502,7 @@ class Settings(ft.UserControl):
             label="Edge webdriver",
             value=False,
             active_color=self.color_scheme,
+            label_position="left",
             tooltip="Use Microsoft Edge webdriver instead of Chrome webdriver",
             on_change=lambda e: self.switches_on_change(e, self.edge_switch)
         )
@@ -509,6 +510,7 @@ class Settings(ft.UserControl):
             label="Use proxy",
             value=False,
             active_color=self.color_scheme,
+            label_position="left",
             tooltip="Use proxy in browser instance if you have set it in your account",
             on_change=lambda e: self.switches_on_change(e, self.use_proxy_switch)
         )
@@ -516,6 +518,7 @@ class Settings(ft.UserControl):
             label="Auto start",
             value=False,
             active_color=self.color_scheme,
+            label_position="left",
             tooltip="Start farming automatically when you start the program",
             on_change=lambda e: self.switches_on_change(e, self.auto_start_switch)
         )
@@ -527,24 +530,9 @@ class Settings(ft.UserControl):
                             title=ft.Text("Global settings"),
                             leading=ft.Icon(ft.icons.SETTINGS_APPLICATIONS),
                         ),
-                        ft.Row(
-                            controls=[
-                                self.headless_switch,
-                                self.edge_switch
-                            ],
-                            spacing=130
-                        ),
-                        ft.Row(
-                            [self.session_switch, self.use_proxy_switch],
-                            spacing=140,
-                        ),
-                        ft.Row(
-                            controls=[
-                                self.fast_switch,
-                                self.auto_start_switch
-                            ],
-                            spacing=162,
-                        ),
+                        ft.Row([self.headless_switch,self.edge_switch], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                        ft.Row([self.session_switch, self.use_proxy_switch], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                        ft.Row([self.fast_switch,self.auto_start_switch], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                         ft.Row([self.save_errors_switch]),
                         ft.Row([self.shutdown_switch]),
                     ],
@@ -590,6 +578,7 @@ class Settings(ft.UserControl):
             label="MSN shopping game",
             value=False,
             active_color=self.color_scheme,
+            label_position=ft.LabelPosition.LEFT,
             on_change=lambda e: self.switches_on_change(e, self.msn_shopping_game_switch)
         )
         self.farmer_settings = ft.Card(

@@ -108,7 +108,7 @@ class Telegram(ft.UserControl):
                 on_click=lambda e: self.clear_text_fields(e, self.test_message_field),
             ),
         )
-        self.progress_ring = ft.ProgressRing(scale=0.75, color=self.color_scheme, visible=False)
+        self.progress_ring = ft.ProgressRing(scale=0.7, color=self.color_scheme, visible=False)
         self.send_icon = ft.Icon(name=ft.icons.SEND, color=self.color_scheme)
         self.send_test_message_button = ft.ElevatedButton(
             icon_color=self.color_scheme,
@@ -120,7 +120,8 @@ class Telegram(ft.UserControl):
                     self.progress_ring,
                     self.send_icon,
                     ft.Text(value="Send", text_align="center"),
-                ]
+                ],
+                alignment="center"
             )
         )
         
