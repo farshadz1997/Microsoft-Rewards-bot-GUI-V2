@@ -10,8 +10,11 @@ You can use the other versions if you have problem with this one:
   - [PyQt5 version](https://github.com/farshadz1997/Microsoft-Rewards-bot-GUI)
 
 ## Installations
+You need to install [Python](https://www.python.org/downloads/) - You need to enable "Add Python to environment variables"
+Download and Unzip the folder
 Follow these steps to run the app:
   - Install required packages:
+    + Open CMD Prompt and type cd *drag the Microsoft-Rewards-bot-GUI-V2-master folder*
     + <pre> pip install -r requirements.txt</pre>
     + Linux users also read this: https://flet.dev/docs/guides/python/getting-started#linux
   - Install Webdriver:
