@@ -408,10 +408,7 @@ class Farmer:
                 time.sleep(2)
                 self.browser.find_element(By.ID, 'iNext').click()
                 time.sleep(5)
-            if self.browser.title == 'Is your security info still accurate?' or self.is_element_exists(By.ID, 'iLooksGood'):
-                time.sleep(2)
-                self.browser.find_element(By.ID, 'iLooksGood').click()
-                time.sleep(5)
+            self.answer_to_security_info_update()
             # Click No thanks on break free from password question
             if self.is_element_exists(By.ID, "setupAppDesc"):
                 time.sleep(2)
@@ -460,16 +457,14 @@ class Farmer:
                 time.sleep(2)
                 self.browser.find_element(By.ID, 'iNext').click()
                 time.sleep(5)
-            if self.browser.title == 'Is your security info still accurate?' or self.is_element_exists(By.ID, 'iLooksGood'):
-                time.sleep(2)
-                self.browser.find_element(By.ID, 'iLooksGood').click()
-                time.sleep(5)
+            self.answer_to_security_info_update()
             if self.page.client_storage.get("MRFarmer.session"):
                 # Click Yes to stay signed in.
                 self.browser.find_element(By.ID, 'idSIButton9').click()
             else:
                 # Click No.
                 self.browser.find_element(By.ID, 'idBtn_Back').click()
+            self.answer_to_security_info_update()
             # Click No thanks on break free from password question
             if self.is_element_exists(By.ID, "setupAppDesc"):
                 time.sleep(2)
@@ -508,10 +503,18 @@ class Farmer:
         # Check Login
         self.home_page.update_detail("Bing...")
         self.check_bing_login(isMobile)
-
+    
+    def answer_to_security_info_update(self):
+        """Clicks on looks good if it asks for security info update"""
+        if self.browser.title == 'Is your security info still accurate?' or self.is_element_exists(By.ID, 'iLooksGood'):
+            time.sleep(2)
+            self.browser.find_element(By.ID, 'iLooksGood').click()
+            time.sleep(5)
+            
     def rewards_login(self, isMobile: bool = False):
         """Login into Microsoft rewards and check account"""
         self.browser.get(self.base_url)
+        self.answer_to_security_info_update()
         try:
             time.sleep(10 if not self.page.client_storage.get("MRFarmer.fast") else 5)
             # click on sign up button if needed
@@ -531,6 +534,7 @@ class Farmer:
             elif self.browser.find_element(By.XPATH, '//*[@id="error"]/h1').get_attribute('innerHTML') == 'Microsoft Rewards is not available in this country or region.':
                 raise RegionException('Microsoft Rewards is not available in your region !')
         except NoSuchElementException:
+            self.answer_to_security_info_update()
             self.wait_until_visible(By.ID, 'app-host', 30)
             points = self.get_account_points()
             self.home_page.update_points_counter(points)
@@ -610,6 +614,8 @@ class Farmer:
             try:
                 time.sleep(1)
                 self.browser.find_element(By.ID, 'HBSignIn').click()
+                time.sleep(5)
+                self.answer_to_security_info_update()
             except:
                 pass
             try:
@@ -1312,7 +1318,7 @@ class Farmer:
     def complete_msn_shopping_game_quiz(self):
 
         def expand_shadow_element(element, index: int = None) -> Union[List[WebElement], WebElement]:
-            """Returns childrens of shadow element"""
+            """Returns childrens of shadow element, if index provided it returns the element at that index"""
             if index is not None:
                 shadow_root = WebDriverWait(self.browser, 45).until(
                     EC.visibility_of(self.browser.execute_script('return arguments[0].shadowRoot.children', element)[index])
@@ -1356,6 +1362,7 @@ class Farmer:
             time.sleep(5)
             self.wait_until_visible(By.ID, 'newSessionLink', 10)
             self.browser.find_element(By.ID, 'newSessionLink').click()
+            self.answer_to_security_info_update()
             self.home_page.update_detail("Waiting for elements")
             self.wait_until_visible(By.TAG_NAME, 'shopping-page-base', 60)
             expand_shadow_element(self.browser.find_element(By.TAG_NAME, 'shopping-page-base'), 0)
