@@ -110,6 +110,8 @@ class Home(ft.UserControl):
         self.section = ft.Text("-")
         self.detail_label = ft.Text("Detail:")
         self.detail = ft.Text("-")
+        self.proxy_label = ft.Text("Proxy:")
+        self.proxy = ft.Text("-")
         self.account_description_card = ft.Card(
             content=ft.Container(
                 content=ft.Column(
@@ -125,7 +127,6 @@ class Home(ft.UserControl):
                                 self.current_point
                             ],
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                            expand=True
                         ),
                         ft.Row(
                             controls=[
@@ -133,7 +134,6 @@ class Home(ft.UserControl):
                                 self.section
                             ],
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                            expand=True
                         ),
                         ft.Row(
                             controls=[
@@ -141,16 +141,20 @@ class Home(ft.UserControl):
                                 self.detail
                             ],
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                            expand=True
+                        ),
+                        ft.Row(
+                            controls=[
+                                self.proxy_label,
+                                self.proxy
+                            ],
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER
                 ),
             margin=ft.margin.all(15),
             ),
-            height=270,
             expand=3,
-            disabled=False,
             margin=ft.margin.symmetric(vertical=25)
         )
         
@@ -417,6 +421,10 @@ class Home(ft.UserControl):
     def update_current_account(self, account: str):
         self.current_account_label.value = account.capitalize()
         self.page.update()
+    
+    def update_proxy(self, proxy: str):
+        self.proxy.value = proxy
+        self.page.update()
       
     def update_overall_infos(self):
         self.number_of_accounts.value = len(self.accounts)
@@ -460,6 +468,7 @@ class Home(ft.UserControl):
         self.section.value =  "-"
         self.detail.value = "-"
         self.current_account_label.value = "Current account: None"
+        self.proxy.value = "-"
         self.stop_button.disabled = True
         self.start_button.disabled = False
         self.page.floating_action_button.disabled = False

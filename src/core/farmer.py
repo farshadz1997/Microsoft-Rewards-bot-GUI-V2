@@ -368,6 +368,9 @@ class Farmer:
         if self.page.client_storage.get("MRFarmer.use_proxy") and self.current_account.get("proxy", False):
             if self.is_proxy_working(self.current_account["proxy"]):
                 options.add_argument(f'--proxy-server={self.current_account["proxy"]}')
+                self.home_page.update_proxy(self.current_account["proxy"])
+            else:
+                self.home_page.update_proxy(f'{self.current_account["proxy"]} not working')
         options.add_argument('log-level=3')
         options.add_argument("--start-maximized")
         if self.page.client_storage.get("MRFarmer.edge_webdriver"):
@@ -1633,7 +1636,8 @@ class Farmer:
 
                     self.home_page.update_points_counter(0)
                     self.home_page.update_overall_infos()
-                    
+                    if self.page.client_storage.get("MRFarmer.use_proxy") and account.get("proxy", False):
+                        self.home_page.update_proxy("None")
                     break
                     
                 except AccountLockedException:
@@ -1644,6 +1648,8 @@ class Farmer:
                     self.update_accounts()
                     self.accounts_page.sync_accounts()
                     self.clean_logs()
+                    if self.page.client_storage.get("MRFarmer.use_proxy") and account.get("proxy", False):
+                        self.home_page.update_proxy("None")
                     break
                 
                 except AccountSuspendedException:
@@ -1658,6 +1664,8 @@ class Farmer:
                     self.accounts_page.sync_accounts()
                     self.finished_accounts.append(account["username"])
                     self.home_page.update_overall_infos()
+                    if self.page.client_storage.get("MRFarmer.use_proxy") and account.get("proxy", False):
+                        self.home_page.update_proxy("-")
                     break
                 
                 except UnusualActivityException:
@@ -1669,6 +1677,8 @@ class Farmer:
                     self.accounts_page.sync_accounts()
                     self.clean_logs()
                     self.home_page.finished()
+                    if self.page.client_storage.get("MRFarmer.use_proxy") and account.get("proxy", False):
+                        self.home_page.update_proxy("-")
                     return None
                     
                 except RegionException:
@@ -1686,6 +1696,8 @@ class Farmer:
                     self.update_accounts()
                     self.accounts_page.sync_accounts()
                     self.clean_logs()
+                    if self.page.client_storage.get("MRFarmer.use_proxy") and account.get("proxy", False):
+                        self.home_page.update_proxy("-")
                     break
                 
                 except UnhandledException:
@@ -1696,6 +1708,8 @@ class Farmer:
                     self.update_accounts()
                     self.accounts_page.sync_accounts()
                     self.clean_logs()
+                    if self.page.client_storage.get("MRFarmer.use_proxy") and account.get("proxy", False):
+                        self.home_page.update_proxy("-")
                     break
                 
                 except (InvalidSessionIdException, MaxRetryError, NewConnectionError):
