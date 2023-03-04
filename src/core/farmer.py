@@ -1731,12 +1731,16 @@ class Farmer:
                 except SessionNotCreatedException:
                     self.browser = None
                     self.home_page.update_section("Webdriver error")
-                    self.home_page.update_detail("Webdriver not found or outdated")
-                    self.parent.display_error("Webdriver error", "Webdriver not found or outdated. Please get or update your webdriver.")
+                    self.home_page.update_detail("Webdriver has outdated")
+                    self.parent.display_error("Webdriver error", "Webdriver has outdated. Please update your Webdriver.")
                     self.home_page.finished()
                     return None
                     
                 except (Exception, FunctionTimedOut) as e:
+                    if "executable needs to be in PATH" in str(e):
+                        self.parent.display_error("Webdriver error", str(e))
+                        self.home_page.finished()
+                        return None
                     try:
                         self.browser.quit()
                     except:
