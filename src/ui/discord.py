@@ -1,6 +1,5 @@
 import flet as ft
 import requests
-import time
 
 
 class Discord(ft.UserControl):
@@ -169,7 +168,6 @@ class Discord(ft.UserControl):
         self.send_icon.color = color_scheme
         self.progress_ring.color = color_scheme
         
-    
     def clear_field(self, e, control: ft.TextField):
         if control.label == "Webhook URL":
             self.discord_switch.value = False
