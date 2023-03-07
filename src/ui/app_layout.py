@@ -5,6 +5,7 @@ from .settings import Settings
 from .telegram import Telegram
 from .discord import Discord
 from .accounts import Accounts
+from .about import About
 from ..core.farmer import PC_USER_AGENT, MOBILE_USER_AGENT
 from .responsive_menu_layout import ResponsiveMenuLayout
 from pathlib import Path
@@ -92,6 +93,7 @@ class UserInterface:
         self.telegram_page = Telegram(self, self.page)
         self.discord_page = Discord(self, self.page)
         self.accounts_page = Accounts(self, self.page)
+        self.about_page = About(self, self.page)
         pages = [
             (
                 dict(icon=ft.icons.HOME, selected_icon=ft.icons.HOME, label="Home"),
@@ -112,6 +114,10 @@ class UserInterface:
             (
                 dict(icon=ft.icons.SETTINGS, selected_icon=ft.icons.SETTINGS, label="Settings"),
                 self.settings_page.build()
+            ),
+            (
+                dict(icon=ft.icons.INFO_ROUNDED, selected_icon=ft.icons.INFO_ROUNDED, label="About"),
+                self.about_page.build()
             )
         ]
         
