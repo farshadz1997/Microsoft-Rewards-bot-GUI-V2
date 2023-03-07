@@ -59,7 +59,6 @@ class Farmer:
         self.accounts: list = self.page.session.get("MRFarmer.accounts")
         self.accounts_path = Path(self.page.client_storage.get("MRFarmer.accounts_path"))
         self.browser: WebDriver = None
-        self.is_running: bool = False
         self.points_counter: int = 0
         self.finished_accounts: list = []
         self.locked_accounts: list = []
@@ -75,6 +74,7 @@ class Farmer:
         """Create message from logs to send to Telegram"""
         today = date.today().strftime("%d/%m/%Y")
         total_earned = 0
+        total_overall = 0
         message = f'📅 Daily report {today}\n\n'
         for index, account in enumerate(self.accounts, 1):
             redeem_message = None
@@ -91,6 +91,7 @@ class Farmer:
                 new_points = account["log"]["Today's points"]
                 total_earned += new_points
                 total_points = account["log"]["Points"]
+                total_overall += total_points
                 message += f"{index}. {account['username']}\n📝 Status: {status}\n⭐️ Earned points: {new_points}\n🏅 Total points: {total_points}\n"
                 if redeem_message:
                     message += redeem_message
@@ -113,12 +114,14 @@ class Farmer:
                 new_points = account["log"]["Today's points"]
                 total_earned += new_points
                 total_points = account["log"]["Points"]
+                total_overall += total_points
                 message += f"{index}. {account['username']}\n📝 Status: {status}\n⭐️ Earned points: {new_points}\n🏅 Total points: {total_points}\n"
                 if redeem_message:
                     message += redeem_message
                 else:
                     message += "\n"
         message += f"💵 Total earned points: {total_earned} (${total_earned/1300:0.02f}) (€{total_earned/1500:0.02f})"
+        message += f"\n💵 Total points overall: {total_overall} (${total_overall/1300:0.02f}) (€{total_overall/1500:0.02f})"
         return message
 
     def send_report_to_messenger(self, message: str):
@@ -1582,7 +1585,8 @@ class Farmer:
                         
                         if self.page.client_storage.get("MRFarmer.pc_search") and not account["log"]["PC searches"]:
                             remainingSearches = self.get_remaining_searches()[0]
-                            self.bing_searches(remainingSearches)
+                            if remainingSearches > 0:
+                                self.bing_searches(remainingSearches)
                             account["log"]["PC searches"] = True
                             self.update_accounts()
                             
