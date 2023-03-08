@@ -800,8 +800,12 @@ class Farmer:
                 raise Exception
         except Exception:
             search_terms = self.get_google_trends(numberOfSearches)
-        if len(search_terms) == 0:
-            raise GetSearchWordsException("Couldn't get search words from sources")
+            if len(search_terms) == 0:
+                try:
+                    words = open(f"{Path(__file__).parent.resolve()}/searchwords.txt", "r").read().splitlines()
+                    search_terms = random.sample(words, numberOfSearches)
+                except:
+                    raise GetSearchWordsException
         for word in search_terms:
             i += 1
             self.home_page.update_detail(f"{i}/{numberOfSearches}")
